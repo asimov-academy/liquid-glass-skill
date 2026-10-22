@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/hero.jpg" alt="Liquid Glass — uma pílula de vidro refratando o título sobre um fundo azul" width="100%">
+<img src="docs/hero.jpg" alt="Liquid Glass — uma lente de vidro refratando o título sobre um deserto" width="100%">
 
 # Liquid Glass para a web
 
@@ -20,7 +20,7 @@ Refração de lente de verdade · morph líquido entre formas · luz especular q
 |---|---|
 | **`dist/`** | A biblioteca: `liquid-glass.js` + `liquid-glass.css` (~16 KB min+gzip, zero dependências, zero build) |
 | **`skills/liquid-glass/`** | A skill para Claude Code / agentes: regras do HIG, API, receitas, armadilhas de cada navegador |
-| **`index.html`** | Galeria interativa com 8 componentes, playground e explicação da ótica |
+| **`index.html`** | Galeria com 15 exemplos interativos: player, botões, toolbar, segmentado, menu, slider, switch, notificações, Central de Controle, Dock, sheet, busca, tab bar, morph e lupa |
 | **`examples/`** | Páginas pequenas e autocontidas para copiar: básico, navbar, tab bar, controles, menu, mídia em movimento |
 
 <table>
@@ -29,7 +29,7 @@ Refração de lente de verdade · morph líquido entre formas · luz especular q
 <td width="50%"><img src="docs/morph.jpg" alt="Formas de vidro se fundindo"><br><sub><b>Morph líquido</b> — formas próximas viram uma superfície só (o <code>GlassEffectContainer</code> da Apple).</sub></td>
 </tr>
 <tr>
-<td><img src="docs/controls.jpg" alt="Central de controle com switches e sliders"><br><sub><b>Switch e slider</b> — o knob vira gota de vidro durante o toque, sobre <code>&lt;input&gt;</code> nativo.</sub></td>
+<td><img src="docs/controls.jpg" alt="Central de controle com switches e sliders"><br><sub><b>Central de Controle</b> — toggles, sliders verticais de brilho e volume com HUD de vidro.</sub></td>
 <td><img src="docs/magnifier.jpg" alt="Lupa de vidro sobre texto"><br><sub><b>Lupa</b> — arraste e jogue: desliza com inércia e quica nas bordas.</sub></td>
 </tr>
 </table>
@@ -72,10 +72,10 @@ Para refração real também no **Safari e no Firefox**, envolva o fundo numa ce
 | Atributo | Padrão | Efeito |
 |---|---|---|
 | `data-glass="clear"` | regular | Variante transparente, para mídia rica |
-| `data-glass-bezel` / `-refraction` | automático | Largura do bisel e quanto a borda dobra o fundo (px) |
+| `data-glass-refraction` | automático (até 60) | Quanto a borda puxa o fundo para dentro (px) |
+| `data-glass-bezel` | 20 | Profundidade da borda curva (px) |
 | `data-glass-magnify` | 1 | Zoom de lente no centro |
 | `data-glass-dispersion` | 0 | Aberração cromática (prisma) |
-| `data-glass-blur` | 7 / 0.5 | Fosco (regular / clear) |
 | `data-glass-tint` | — | Vidro colorido (ação principal) |
 | `data-glass-dim` | — | Camada escura de 35% (HIG, clear sobre mídia clara) |
 | `data-glass-interactive` | — | Cresce, estica e brilha no toque, com molas |
@@ -106,15 +106,12 @@ Depois é só pedir: *“cria uma landing com navbar de Liquid Glass sobre um v�
 
 ## 🔬 Como funciona
 
-1. **Ótica** — a borda é um bisel convexo em forma de *squircle*. Para cada pixel o JS calcula a distância até a borda e a normal, e guarda num PNG quanto e para onde o fundo deve ser deslocado (R/G = vetor). O perfil é "sem dobras": a borda estica o conteúdo ao longo da curva sem duplicar letras.
-2. **Renderização** — `feDisplacementMap` do SVG aplica o mapa:
-   - **Chromium**: `backdrop-filter: url(#filtro)` refrata ao vivo qualquer coisa atrás do elemento.
-   - **Safari / Firefox**: um filtro por `.lg-scene`, aplicado ao `.lg-backdrop`, com uma lente por elemento (em coordenadas fracionárias, que o WebKit respeita).
-   - **Fallback**: vidro fosco com o mesmo aro, tint e molas.
-3. **Luz e movimento** — sombreamento do bisel gerado das normais 3D, aro especular cônico que segue o ponteiro, brilho no ponto de toque e molas físicas interruptíveis.
-4. **Morph** — grupos combinam as formas com *smooth-min* de campos de distância: elas criam um pescoço ao se aproximar e se separam como líquido.
+1. **Mapas** — para cada pixel o JS calcula a distância até a borda e a direção dela. A borda é um bisel circular de 20 px: ali o fundo é puxado para dentro (até 60 px em superfícies grandes), esticando o conteúdo ao longo da curva. Um segundo mapa desenha a luz do contorno: um traço fino em cima e embaixo e uma sombra discreta nas laterais.
+2. **Material** — a variante *regular* refrata uma cópia fosca do fundo (blur 7.33 combinado com um blur largo, clareando no modo claro e escurecendo no escuro), depois aplica uma curva de tom e saturação. A *clear* não desfoca: só levanta as sombras e segura os brilhos.
+3. **Renderização** — no Chromium o material inteiro roda como `backdrop-filter: url(#filtro)` e refrata qualquer coisa atrás. No Safari e no Firefox, um filtro por `.lg-scene` desenha todas as lentes da cena sobre o `.lg-backdrop`. Sem cena, vira vidro fosco.
+4. **Movimento e morph** — molas físicas interruptíveis; grupos fundem as formas com *smooth-min* de campos de distância.
 
-Detalhes: [`references/how-it-works.md`](skills/liquid-glass/references/how-it-works.md).
+O modelo de material é um port em JavaScript puro do [Glass-HQ/liquid-glass](https://github.com/Glass-HQ/liquid-glass) (MIT), que usa React e WebGPU. Detalhes: [`references/how-it-works.md`](skills/liquid-glass/references/how-it-works.md).
 
 ## ♿ Acessibilidade
 
@@ -146,7 +143,7 @@ Os fundos dos exemplos são gerados por código (`tools/wallpapers.html`) — ne
 **Apple's Liquid Glass, rebuilt with plain HTML, CSS and JavaScript — plus an agent skill that teaches Claude to use it well.**
 
 - Drop `dist/liquid-glass.css` + `dist/liquid-glass.js` into any page (or use the jsDelivr links above) and add `class="glass"` to floating UI. The `border-radius` is the lens shape.
-- Real lens refraction via SVG displacement maps computed per element; live in Chromium through `backdrop-filter: url()`, and in Safari/Firefox inside a `.lg-scene` with a `.lg-backdrop`.
+- Material model ported from Glass-HQ/liquid-glass (MIT): frosted backdrop, tone curves, circular rim profile and rim lighting, as SVG filters computed per element; live in Chromium through `backdrop-filter: url()`, and in Safari/Firefox inside a `.lg-scene` with a `.lg-backdrop`.
 - Components: buttons, toolbars, tab bars/segmented controls with a draggable liquid lens, morphing menus, switches, sliders, progressive blur, magnifier lenses and liquid **morph groups** (GlassEffectContainer).
 - Install the skill: `/plugin marketplace add asimov-academy/liquid-glass-skill` then `/plugin install liquid-glass@asimov-academy`, or copy `skills/liquid-glass` into `~/.claude/skills/`.
 - Docs for agents and humans live in [`skills/liquid-glass/`](skills/liquid-glass/SKILL.md).
@@ -154,6 +151,6 @@ Os fundos dos exemplos são gerados por código (`tools/wallpapers.html`) — ne
 ---
 
 <div align="center">
-<sub>Feito pela <a href="https://asimov.academy">Asimov Academy</a> · Licença <a href="LICENSE">MIT</a><br>
+<sub>Feito pela <a href="https://asimov.academy">Asimov Academy</a> · Licença <a href="LICENSE">MIT</a> · Material baseado em <a href="https://github.com/Glass-HQ/liquid-glass">Glass-HQ/liquid-glass</a> (MIT)<br>
 Inspirado no <a href="https://developer.apple.com/design/human-interface-guidelines/materials">Human Interface Guidelines</a>. Não afiliado à Apple Inc. “Liquid Glass” é uma marca da Apple.</sub>
 </div>

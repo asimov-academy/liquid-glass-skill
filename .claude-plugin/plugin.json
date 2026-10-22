@@ -1,6 +1,6 @@
 {
   "name": "liquid-glass",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Apple's Liquid Glass for the web in pure HTML, CSS and JS — refraction, liquid morphing, specular light and spring physics, with HIG-guided components.",
   "author": { "name": "Asimov Academy", "url": "https://asimov.academy" },
   "homepage": "https://asimov-academy.github.io/liquid-glass-skill/",

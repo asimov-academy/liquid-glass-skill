@@ -1,21 +1,18 @@
 <!doctype html>
-<html lang="pt-BR" data-glass-appearance="dark">
+<html lang="pt-BR" data-glass-appearance="auto">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Liquid Glass — HTML, CSS e JS puros</title>
-  <meta name="description" content="O Liquid Glass da Apple recriado com HTML, CSS e JavaScript puros: refração física, brilho especular, molas interativas e componentes. Skill para Claude Code por Asimov Academy.">
-  <meta name="theme-color" content="#08080b">
-  <meta property="og:title" content="Liquid Glass — HTML, CSS e JS puros">
-  <meta property="og:description" content="Refração de verdade, sem React. Skill + exemplos por Asimov Academy.">
+  <title>Liquid Glass — HTML, CSS e JS</title>
+  <meta name="description" content="O Liquid Glass da Apple em HTML, CSS e JavaScript puros, com exemplos interativos. Skill para Claude Code por Asimov Academy.">
+  <meta property="og:title" content="Liquid Glass — HTML, CSS e JS">
+  <meta property="og:description" content="O material da Apple sem React. Exemplos interativos + skill para Claude Code.">
   <meta property="og:image" content="https://asimov-academy.github.io/liquid-glass-skill/examples/assets/og.jpg">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.32' cy='.3'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='.25' stop-color='%23bfe1ff'/%3E%3Cstop offset='.55' stop-color='%235aa7ff'/%3E%3Cstop offset='1' stop-color='%236a3dff'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='url(%23g)'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.32' cy='.3'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='.3' stop-color='%23cfe4ff'/%3E%3Cstop offset='.6' stop-color='%235aa7ff'/%3E%3Cstop offset='1' stop-color='%233a5bff'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='url(%23g)'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="dist/liquid-glass.css">
   <link rel="stylesheet" href="site/site.css">
 </head>
 <body>
-
-<!-- Icon sprite (hand-drawn, original) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 4.8v14.4c0 .8.9 1.3 1.6.9l11.2-7.2a1 1 0 0 0 0-1.8L9.6 3.9C8.9 3.5 8 4 8 4.8z"/></symbol>
@@ -57,234 +54,276 @@
     <symbol id="i-code" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m8 7-5 5 5 5M16 7l5 5-5 5M13.5 4.5l-3 15"/></symbol>
   </defs>
 </svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-gear" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="3.2"/><path stroke-linecap="round" d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></g></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-plane" viewBox="0 0 24 24"><path fill="currentColor" d="M21 15.5v-1.8l-8-4.7V4.5a1.5 1.5 0 0 0-3 0V9l-8 4.7v1.8l8-2.3v4.6l-2.2 1.6V21l3.7-1 3.7 1v-1.6L13 17.8v-4.6z"/></symbol>
+  <symbol id="i-cell" viewBox="0 0 24 24"><g fill="currentColor"><rect x="3" y="15" width="3.4" height="5" rx="1"/><rect x="8.2" y="11.5" width="3.4" height="8.5" rx="1"/><rect x="13.4" y="8" width="3.4" height="12" rx="1"/><rect x="18.6" y="4" width="3.4" height="16" rx="1"/></g></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></g></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.2-3.4-1.2-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 2.9.8.1-.7.4-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5A10 10 0 0 0 12 2.2z"/></symbol>
+</defs></svg>
 
-<!-- ======================= NAV ======================= -->
-<nav class="glass nav" aria-label="Principal" data-glass-refraction="14" data-glass-bezel="12">
-  <a class="brand" href="#top"><span class="brand-dot" aria-hidden="true"></span>Liquid Glass</a>
-  <div class="links">
-    <a href="#componentes">Componentes</a>
-    <a href="#playground">Playground</a>
-    <a href="#como-funciona">Como funciona</a>
-    <a href="#skill">Skill</a>
-  </div>
-  <a class="glass lg-button cta" data-glass-interactive data-glass-tint="#0a84ff" href="https://github.com/asimov-academy/liquid-glass-skill">
-    <svg aria-hidden="true"><use href="#i-code"/></svg>GitHub
-  </a>
+<nav class="glass nav" aria-label="Principal" data-glass-appearance="light">
+  <span class="brand"><span class="brand-dot" aria-hidden="true"></span>Liquid Glass</span>
+  <a class="glass lg-button" data-glass-interactive href="#instalar">Instalar</a>
+  <a class="glass lg-button lg-icon" data-glass-interactive href="https://github.com/asimov-academy/liquid-glass-skill" aria-label="GitHub" style="width:36px"><svg><use href="#i-github"/></svg></a>
 </nav>
 
-<main id="top">
-
-<!-- ======================= HERO ======================= -->
-<header class="hero lg-scene">
-  <div class="lg-backdrop">
-    <div class="hero-bg"></div>
-    <div class="hero-copy">
-      <h1>Liquid Glass<span>sem React. Só a web.</span></h1>
-      <p class="lead">O material da Apple recriado com HTML, CSS e JavaScript puros — refração de lente de verdade, formas que se fundem como líquido, brilho especular e molas interativas. Um arquivo JS, um CSS, zero build.</p>
+<main>
+  <!-- HERO -->
+  <section class="hero lg-scene" data-glass-appearance="light">
+    <div class="lg-backdrop">
+      <div class="bg bg-desert"></div>
+      <div class="hero-title"><h1>Liquid Glass</h1><p>HTML, CSS e JavaScript. Sem React.</p></div>
     </div>
-  </div>
-  <div class="hero-actions" id="hero-actions">
-    <a class="glass lg-button" data-size="large" data-glass-interactive data-glass-tint="#0a84ff" href="#componentes">Ver componentes</a>
-    <a class="glass lg-button" data-size="large" data-glass-interactive href="#skill"><svg aria-hidden="true"><use href="#i-sparkle"/></svg>Instalar a skill</a>
-  </div>
-  <div class="glass hero-lens" data-glass="clear" data-glass-draggable data-glass-interactive data-glass-dispersion="0.06" data-glass-bezel="40" data-glass-refraction="22"
-       role="img" aria-label="Pílula de vidro líquido arrastável" tabindex="0">
-    <span class="lens-hint">↔ arraste o vidro</span>
-  </div>
-  <div class="hero-strip" aria-hidden="true">
-    <span class="glass chip" data-glass-refraction="10" data-glass-bezel="10"><svg><use href="#i-drop"/></svg>Refração física</span>
-    <span class="glass chip" data-glass-refraction="10" data-glass-bezel="10"><svg><use href="#i-light"/></svg>Luz especular dinâmica</span>
-    <span class="glass chip" data-glass-refraction="10" data-glass-bezel="10"><svg><use href="#i-spring"/></svg>Morph líquido</span>
-    <span class="glass chip" data-glass-refraction="10" data-glass-bezel="10"><svg><use href="#i-access"/></svg>Acessível (HIG)</span>
-  </div>
-</header>
+    <div class="glass hero-lens" data-glass="clear" data-glass-draggable data-glass-interactive data-glass-refraction="34" data-glass-magnify="1.08" tabindex="0" role="img" aria-label="Lente de vidro arrastável"></div>
+    <div class="hero-hint">
+      <span class="glass chip">Arraste o vidro</span>
+      <a class="glass chip" data-glass-interactive href="#instalar">Instalar</a>
+    </div>
+  </section>
 
-<!-- ======================= COMPONENTS ======================= -->
-<section class="block" id="componentes">
-  <div class="wrap">
-    <div class="eyebrow">Componentes</div>
-    <h2>Tudo o que o vidro precisa.</h2>
-    <p class="sub">Cada exemplo é HTML semântico com uma classe <code>.glass</code> e alguns <code>data-</code> atributos. Clique em <b>Código</b> em qualquer cartão para copiar.</p>
+  <div class="gallery">
 
-    <!-- 1. Surface -->
-    <article class="demo" id="superficie">
-      <div class="demo-head">
-        <div>
-          <h3><span class="num">01</span>Superfície</h3>
-          <p>A camada funcional que flutua sobre o conteúdo. Variante <i>regular</i>: desfoca e comprime a luminosidade para manter o texto legível.</p>
-          <div class="hig"><b>HIG</b> Use Liquid Glass só na camada de navegação e controles — nunca no conteúdo.</div>
+    <!-- 1 Player -->
+    <div class="cell"><h2>Superfície</h2>
+      <div class="stage lg-scene" data-custom data-glass-appearance="light">
+        <div class="lg-backdrop"><div class="bg bg-desert"></div></div>
+        <div class="glass player" id="player" data-glass-draggable data-glass-interactive>
+          <div class="player-top">
+            <div class="cover" id="cover"></div>
+            <div class="meta"><b>Maré Alta</b><span>Os Satélites</span></div>
+            <button class="ibtn" id="like" aria-label="Favoritar" aria-pressed="false"><svg><use href="#i-heart"/></svg></button>
+          </div>
+          <div class="scrub" id="scrub" role="slider" aria-label="Posição" aria-valuemin="0" aria-valuemax="331" aria-valuenow="111" tabindex="0"><i></i></div>
+          <div class="times">
+            <span id="t-now">1:51</span>
+            <span style="display:flex;gap:4px">
+              <button class="ibtn" id="prev" aria-label="Anterior"><svg><use href="#i-back"/></svg></button>
+              <button class="ibtn" id="play" aria-label="Tocar"><svg><use href="#i-play"/></svg></button>
+              <button class="ibtn" id="next" aria-label="Próxima"><svg><use href="#i-fwd"/></svg></button>
+            </span>
+            <span id="t-left">-3:40</span>
+          </div>
         </div>
       </div>
-      <div class="stage lg-scene">
-        <div class="lg-backdrop"><div class="bg bg-dunes"></div></div>
-        <div class="center stage-ui">
-          <div class="glass player" data-glass-refraction="18" data-glass-bezel="18">
-            <div class="player-top">
-              <div class="cover cover-1" role="img" aria-label="Capa do álbum"></div>
-              <div class="meta"><b>Maré Alta</b><span>Os Satélites</span></div>
-              <button class="icon-btn like" aria-label="Favoritar" aria-pressed="false"><svg><use href="#i-heart"/></svg></button>
+    </div>
+
+    <!-- 2 Buttons -->
+    <div class="cell"><h2>Botões</h2>
+      <div class="stage lg-scene" data-custom data-glass-appearance="light">
+        <div class="lg-backdrop"><div class="bg bg-desert"></div></div>
+        <div class="center col">
+          <div class="row">
+            <button class="glass lg-button" data-size="large" data-glass-interactive id="go">Começar <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+            <button class="glass lg-button counter" data-size="large" data-glass-interactive id="count"><span class="lbl">Toques: 0</span></button>
+          </div>
+          <div class="row">
+            <button class="glass lg-button lg-icon" data-size="large" data-glass-interactive data-fx="heart" aria-label="Curtir"><svg><use href="#i-heart"/></svg></button>
+            <button class="glass lg-button lg-icon" data-size="large" data-glass-interactive data-fx="star" aria-label="Favoritar"><svg><use href="#i-star"/></svg></button>
+            <button class="glass lg-button lg-icon" data-size="large" data-glass-interactive data-glass-tint="#0a84ff" data-fx="plus" aria-label="Adicionar"><svg><use href="#i-plus"/></svg></button>
+            <button class="glass lg-button lg-icon" data-size="large" data-glass-interactive data-glass-tint="#30d158" data-fx="check" aria-label="Confirmar"><svg><use href="#i-check"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 Toolbar -->
+    <div class="cell"><h2>Toolbar</h2>
+      <div class="stage lg-scene" data-custom data-glass-appearance="light">
+        <div class="lg-backdrop"><div class="bg bg-desert"></div></div>
+        <div class="center col">
+          <div class="glass lg-toolbar" role="toolbar" aria-label="Reprodução" id="tb1">
+            <button aria-label="Tocar" id="tb-play"><svg><use href="#i-play"/></svg></button>
+            <button aria-label="Volume" id="tb-vol" aria-pressed="false"><svg><use href="#i-vol-hi"/></svg></button>
+            <button aria-label="Curtir" class="heart" aria-pressed="false"><svg><use href="#i-heart"/></svg></button>
+          </div>
+          <div class="glass lg-toolbar" role="toolbar" aria-label="Formatação" id="tb2">
+            <button aria-label="Negrito" aria-pressed="false" data-fmt="bold"><svg><use href="#i-bold"/></svg></button>
+            <button aria-label="Itálico" aria-pressed="false" data-fmt="italic"><svg><use href="#i-italic"/></svg></button>
+            <button aria-label="Sublinhado" aria-pressed="false" data-fmt="underline"><svg><use href="#i-under"/></svg></button>
+            <span class="lg-toolbar-sep"></span>
+            <button aria-label="Desfazer" data-fmt="undo"><svg><use href="#i-undo"/></svg></button>
+          </div>
+        </div>
+        <p class="status" id="tb-status">Toque nos botões</p>
+      </div>
+    </div>
+
+    <!-- 4 Segmented -->
+    <div class="cell"><h2>Controle segmentado</h2>
+      <div class="stage lg-scene" data-custom data-glass-appearance="light">
+        <div class="lg-backdrop"><div class="bg bg-desert"></div><div class="bigword" id="bigword">Ouvir</div></div>
+        <div class="seg-wrap">
+          <nav class="glass lg-tabs" aria-label="Seção" id="seg">
+            <div class="lg-tabs-list" role="tablist">
+              <button role="tab" aria-selected="true">Ouvir</button>
+              <button role="tab">Explorar</button>
+              <button role="tab">Biblioteca</button>
             </div>
-            <div class="progress" role="progressbar" aria-label="Progresso" aria-valuenow="34" aria-valuemin="0" aria-valuemax="100"><span></span></div>
-            <div class="times">
-              <span>1:51</span>
-              <div class="transport">
-                <button class="icon-btn" aria-label="Anterior"><svg><use href="#i-back"/></svg></button>
-                <button class="icon-btn big playpause" aria-label="Pausar"><svg><use href="#i-pause"/></svg></button>
-                <button class="icon-btn" aria-label="Próxima"><svg><use href="#i-fwd"/></svg></button>
-              </div>
-              <span>-3:40</span>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 Menu -->
+    <div class="cell"><h2>Menu</h2>
+      <div class="stage lg-scene" data-custom data-glass-appearance="light">
+        <div class="lg-backdrop"><div class="bg bg-desert" id="menu-bg"></div></div>
+        <div class="center" style="align-items:flex-start;padding-top:120px">
+          <div class="lg-menu" id="menu1">
+            <button class="glass lg-button lg-icon" data-size="large" data-glass-interactive aria-haspopup="menu" aria-label="Mais ações"><svg><use href="#i-more"/></svg></button>
+            <div class="glass lg-menu-panel" role="menu" aria-label="Ações">
+              <button role="menuitem" data-value="copy"><svg><use href="#i-copy"/></svg>Copiar</button>
+              <button role="menuitem" data-value="share"><svg><use href="#i-share"/></svg>Compartilhar</button>
+              <button role="menuitem" data-value="fav"><svg><use href="#i-star"/></svg>Favoritar</button>
+              <button role="menuitem" data-value="rename"><svg><use href="#i-pencil"/></svg>Renomear</button>
+              <div class="lg-menu-sep" role="separator"></div>
+              <button role="menuitem" data-value="delete" data-destructive><svg><use href="#i-trash"/></svg>Apagar</button>
             </div>
           </div>
         </div>
-        <div class="code-view"></div>
-        <script type="text/plain" class="src"><link rel="stylesheet" href="liquid-glass.css">
-<script src="liquid-glass.js"><\/script>
-
-<!-- Uma superfície de vidro: qualquer elemento com .glass -->
-<div class="glass player" data-glass-refraction="18" data-glass-bezel="18"
-     style="width:360px; border-radius:30px; padding:16px 18px">
-  <div class="player-top">
-    <div class="cover"></div>
-    <div class="meta"><b>Maré Alta</b><span>Os Satélites</span></div>
-    <button class="icon-btn" aria-label="Favoritar">…</button>
-  </div>
-  <div class="progress"><span></span></div>
-</div></script>
+        <p class="status" id="menu-status">Abra o menu</p>
       </div>
-    </article>
+    </div>
 
-    <!-- 2. Buttons -->
-    <article class="demo" id="botoes">
-      <div class="demo-head">
-        <div>
-          <h3><span class="num">02</span>Botões</h3>
-          <p>Pressione e arraste: o vidro cresce, ilumina a partir do toque e estica como um líquido — com molas que podem ser interrompidas no meio.</p>
-          <div class="hig"><b>HIG</b> Use a variante <i>clear</i> só sobre mídia rica; com fundo claro, adicione um dim de 35%.</div>
-        </div>
-      </div>
-      <div class="stage lg-scene">
-        <div class="lg-backdrop"><div class="bg bg-aurora"></div></div>
-        <div class="center stage-ui">
-          <div class="btn-grid">
-            <div class="btn-row">
-              <button class="glass lg-button" data-size="large" data-glass-interactive data-glass-tint="#0a84ff">Começar <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
-              <button class="glass lg-button" data-size="large" data-glass-interactive>Saiba mais</button>
-              <button class="glass lg-button" data-size="large" data-glass="clear" data-glass-dim data-glass-interactive>Clear + dim</button>
-            </div>
-            <div class="btn-row">
-              <button class="glass lg-button lg-icon" data-size="large" data-glass-interactive aria-label="Adicionar"><svg><use href="#i-plus"/></svg></button>
-              <button class="glass lg-button lg-icon" data-size="large" data-glass-interactive aria-label="Compartilhar"><svg><use href="#i-share"/></svg></button>
-              <button class="glass lg-button lg-icon" data-size="large" data-glass-interactive data-glass-tint="#ff375f" aria-label="Favoritar"><svg><use href="#i-heart"/></svg></button>
-              <button class="glass lg-button lg-icon" data-size="large" data-glass-interactive data-glass-tint="#30d158" aria-label="Tocar"><svg><use href="#i-play"/></svg></button>
-            </div>
-            <div class="btn-row">
-              <button class="glass lg-button" data-size="small" data-glass-interactive>Pequeno</button>
-              <button class="glass lg-button" data-glass-interactive>Médio</button>
-              <button class="glass lg-button" data-size="large" data-glass-interactive data-glass-tint="#bf5af2">Grande</button>
-            </div>
+    <!-- 6 Slider lab -->
+    <div class="cell"><h2>Slider</h2>
+      <div class="stage lg-scene" data-custom data-glass-appearance="light">
+        <div class="lg-backdrop"><div class="bg bg-desert"></div></div>
+        <div class="center col" style="gap:22px">
+          <div class="glass lab-pill" id="lab-pill" data-glass="clear" data-glass-interactive>Vidro</div>
+          <div class="glass lab">
+            <label for="r-ref">Refração <output id="o-ref">40</output></label>
+            <div class="lg-slider"><input id="r-ref" type="range" min="0" max="60" value="40"></div>
+            <label for="r-mag">Ampliação <output id="o-mag">1.00×</output></label>
+            <div class="lg-slider"><input id="r-mag" type="range" min="100" max="160" value="100"></div>
           </div>
         </div>
-        <div class="code-view"></div>
-        <script type="text/plain" class="src"><!-- Regular -->
-<button class="glass lg-button" data-glass-interactive>Saiba mais</button>
-
-<!-- Proeminente (tinted) -->
-<button class="glass lg-button" data-glass-interactive data-glass-tint="#0a84ff">Começar</button>
-
-<!-- Clear com dim de 35% (HIG) -->
-<button class="glass lg-button" data-glass="clear" data-glass-dim data-glass-interactive>Clear</button>
-
-<!-- Só ícone + tamanhos: data-size="small | large" -->
-<button class="glass lg-button lg-icon" data-size="large" data-glass-interactive aria-label="Adicionar">
-  <svg>…</svg>
-</button></script>
       </div>
-    </article>
+    </div>
 
-    <!-- 3. Toolbar + Menu -->
-    <article class="demo" id="toolbar">
-      <div class="demo-head">
-        <div>
-          <h3><span class="num">03</span>Toolbar e menu</h3>
-          <p>Ações relacionadas compartilham uma única cápsula de vidro. O botão <b>•••</b> se transforma fluidamente no menu.</p>
-          <div class="hig"><b>HIG</b> Agrupe ações parecidas e não misture texto e ícones no mesmo fundo.</div>
+    <!-- 7 Switches -->
+    <div class="cell"><h2>Switch</h2>
+      <div class="stage lg-scene" id="sw-stage" data-glass-appearance="light">
+        <div class="lg-backdrop"><div class="bg bg-desert"></div></div>
+        <div class="center">
+          <div class="glass settings">
+            <div class="set-row"><span>Modo escuro<small>Troca a aparência do vidro</small></span><label class="lg-switch"><input type="checkbox" id="sw-dark" aria-label="Modo escuro"></label></div>
+            <div class="set-row"><span>Vidro transparente<small>Material clear</small></span><label class="lg-switch"><input type="checkbox" id="sw-clear" aria-label="Vidro transparente"></label></div>
+            <div class="set-row"><span>Cor<small>Vidro com tint</small></span><label class="lg-switch" style="--lg-switch-on:#bf5af2"><input type="checkbox" id="sw-tint" aria-label="Cor"></label></div>
+          </div>
         </div>
       </div>
-      <div class="stage lg-scene">
+    </div>
+
+    <!-- 9 Notifications -->
+    <div class="cell"><h2>Notificações</h2>
+      <div class="stage lg-scene" data-custom data-glass-appearance="dark">
         <div class="lg-backdrop"><div class="bg bg-bokeh"></div></div>
-        <div class="center stage-ui">
-          <div class="toolbar-demo">
-            <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
-              <div class="glass lg-toolbar" role="toolbar" aria-label="Histórico">
-                <button aria-label="Desfazer"><svg><use href="#i-undo"/></svg></button>
-                <button aria-label="Refazer"><svg><use href="#i-redo"/></svg></button>
-              </div>
-              <div class="glass lg-toolbar" role="toolbar" aria-label="Formatação">
-                <button aria-label="Negrito" aria-pressed="true"><svg><use href="#i-bold"/></svg></button>
-                <button aria-label="Itálico" aria-pressed="false"><svg><use href="#i-italic"/></svg></button>
-                <button aria-label="Sublinhado" aria-pressed="false"><svg><use href="#i-under"/></svg></button>
-              </div>
-              <div class="lg-menu">
-                <button class="glass lg-button lg-icon" data-glass-interactive aria-haspopup="menu" aria-label="Mais ações"><svg><use href="#i-more"/></svg></button>
-                <div class="glass lg-menu-panel" role="menu" aria-label="Ações">
-                  <button role="menuitem"><svg><use href="#i-copy"/></svg>Copiar</button>
-                  <button role="menuitem"><svg><use href="#i-share"/></svg>Compartilhar</button>
-                  <button role="menuitem"><svg><use href="#i-star"/></svg>Favoritar</button>
-                  <button role="menuitem"><svg><use href="#i-pencil"/></svg>Renomear</button>
-                  <div class="lg-menu-sep" role="separator"></div>
-                  <button role="menuitem" data-destructive><svg><use href="#i-trash"/></svg>Apagar</button>
-                </div>
-              </div>
-            </div>
+        <div class="stack" id="stack"></div>
+        <div class="notify-bar">
+          <button class="glass lg-button" data-glass-interactive id="notify"><svg aria-hidden="true"><use href="#i-bell"/></svg>Notificar</button>
+          <button class="glass lg-button" data-glass-interactive id="clear-notes">Limpar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8 Control center -->
+    <div class="cell wide"><h2>Central de Controle</h2>
+      <div class="stage lg-scene" data-custom data-glass-appearance="dark">
+        <div class="lg-backdrop"><div class="bg bg-aurora" id="cc-bg"></div></div>
+        <div class="glass hud" id="hud"><svg><use href="#i-vol-hi"/></svg><span class="meter"><i></i></span></div>
+        <div class="center">
+          <div class="cc">
+            <button class="glass tile" aria-pressed="true" aria-label="Modo avião" style="--on:#ff9f0a" data-glass-interactive><span class="dot"><svg><use href="#i-plane"/></svg></span></button>
+            <button class="glass tile" aria-pressed="true" aria-label="Dados celulares" style="--on:#30d158" data-glass-interactive><span class="dot"><svg><use href="#i-cell"/></svg></span></button>
+            <div class="glass tile tall" id="cc-bright" role="slider" aria-label="Brilho" aria-valuemin="0" aria-valuemax="100" aria-valuenow="70" tabindex="0" style="--v:70%"><span class="level"></span><svg><use href="#i-sun"/></svg></div>
+            <div class="glass tile tall" id="cc-vol" role="slider" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0" style="--v:50%"><span class="level"></span><svg><use href="#i-vol-hi"/></svg></div>
+            <button class="glass tile" aria-pressed="true" aria-label="Wi-Fi" data-glass-interactive><span class="dot"><svg><use href="#i-wifi"/></svg></span></button>
+            <button class="glass tile" aria-pressed="false" aria-label="Bluetooth" data-glass-interactive><span class="dot"><svg><use href="#i-bt"/></svg></span></button>
+            <button class="glass tile wide2" aria-pressed="false" style="--on:#5e5ce6" data-glass-interactive id="focus"><span class="dot"><svg><use href="#i-moon"/></svg></span><span>Foco<small id="focus-s">Desativado</small></span></button>
+            <button class="glass tile" aria-pressed="false" aria-label="Bloqueio de rotação" style="--on:#ff375f" data-glass-interactive><span class="dot"><svg><use href="#i-lock"/></svg></span></button>
+            <button class="glass tile" aria-pressed="false" aria-label="Lanterna" style="--on:#ffd60a" data-glass-interactive id="torch"><span class="dot"><svg><use href="#i-light"/></svg></span></button>
           </div>
         </div>
-        <div class="code-view"></div>
-        <script type="text/plain" class="src"><!-- Toolbar: uma cápsula, itens simples dentro -->
-<div class="glass lg-toolbar" role="toolbar" aria-label="Formatação">
-  <button aria-label="Negrito" aria-pressed="true"><svg>…</svg></button>
-  <button aria-label="Itálico"><svg>…</svg></button>
-</div>
-
-<!-- Menu: o botão vira o painel (morph com mola) -->
-<div class="lg-menu">
-  <button class="glass lg-button lg-icon" aria-haspopup="menu" aria-label="Mais">…</button>
-  <div class="glass lg-menu-panel" role="menu">
-    <button role="menuitem">Copiar</button>
-    <div class="lg-menu-sep"></div>
-    <button role="menuitem" data-destructive>Apagar</button>
-  </div>
-</div>
-<script>
-  document.querySelector('.lg-menu')
-    .addEventListener('lg:select', e => console.log(e.detail.value));
-<\/script></script>
       </div>
-    </article>
+    </div>
 
-    <!-- 4. Tab bar -->
-    <article class="demo" id="tabbar">
-      <div class="demo-head">
-        <div>
-          <h3><span class="num">04</span>Tab bar</h3>
-          <p>Toque ou <b>arraste</b> sobre as abas: a seleção vira uma lente líquida que amplia os ícones, estica com a velocidade e encaixa com mola.</p>
-          <div class="hig"><b>HIG</b> A navegação flutua na camada de vidro; o conteúdo rola por baixo.</div>
+    <!-- 10 Dock -->
+    <div class="cell"><h2>Dock</h2>
+      <div class="stage lg-scene" data-custom data-glass-appearance="light">
+        <div class="lg-backdrop"><div class="bg bg-mist"></div></div>
+        <div class="glass window" id="window"><div class="lights"><i id="win-close"></i><i></i><i></i></div><div class="big" id="win-title">App</div></div>
+        <div class="glass dock-label" id="dock-label">App</div>
+        <div class="glass dock" id="dock">
+          <button class="app-icon art-1" aria-label="Música" data-name="Música"></button>
+          <button class="app-icon art-3" aria-label="Fotos" data-name="Fotos"></button>
+          <button class="app-icon art-4" aria-label="Mapas" data-name="Mapas"></button>
+          <button class="app-icon art-8" aria-label="Clima" data-name="Clima"></button>
+          <button class="app-icon art-7" aria-label="Podcasts" data-name="Podcasts"></button>
+          <button class="app-icon art-2" aria-label="Notas" data-name="Notas"></button>
+          <button class="app-icon art-9" aria-label="Jogos" data-name="Jogos"></button>
         </div>
       </div>
-      <div class="stage lg-scene">
+    </div>
+
+    <!-- 11 Sheet -->
+    <div class="cell"><h2>Sheet</h2>
+      <div class="stage lg-scene" data-custom data-glass-appearance="light">
+        <div class="lg-backdrop"><div class="bg bg-desert"></div></div>
+        <div class="center"><button class="glass lg-button" data-size="large" data-glass-interactive id="open-sheet"><svg aria-hidden="true"><use href="#i-share"/></svg>Compartilhar</button></div>
+        <div class="glass sheet" id="sheet" role="dialog" aria-label="Compartilhar" aria-hidden="true">
+          <div class="grabber"></div>
+          <h3>Compartilhar</h3>
+          <p>Arraste para baixo para fechar.</p>
+          <div class="share-row">
+            <button><i class="art-3"></i>AirDrop</button>
+            <button><i class="art-8"></i>Mensagens</button>
+            <button><i class="art-1"></i>Mail</button>
+            <button><i class="art-7"></i>Notas</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 16 Search -->
+    <div class="cell"><h2>Busca</h2>
+      <div class="stage lg-scene" data-custom data-glass-appearance="light">
+        <div class="lg-backdrop"><div class="bg bg-desert"></div></div>
+        <div class="search-wrap" id="search-wrap">
+          <div class="glass search" id="search" data-glass-interactive>
+            <svg aria-hidden="true"><use href="#i-search"/></svg>
+            <input id="search-input" type="search" placeholder="Buscar" aria-label="Buscar" autocomplete="off">
+            <button class="ibtn" id="search-x" aria-label="Fechar busca"><svg><use href="#i-x"/></svg></button>
+          </div>
+          <div class="glass results" id="results" role="listbox" aria-label="Resultados"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 12 App -->
+    <div class="cell"><h2>Tab bar</h2>
+      <div class="stage lg-scene" data-glass-appearance="light">
         <div class="lg-backdrop"><div class="bg bg-mist"></div></div>
-        <div class="center stage-ui">
-          <div class="phone lg-scene">
-            <div class="lg-backdrop">
-              <div class="feed">
-                <h4>Ouvir agora</h4>
-                <div class="card-art art-1">Maré Alta<br>Os Satélites</div>
-                <div class="row-art"><div class="card-art art-3">Órbita Baixa</div><div class="card-art art-2">Neon 88</div></div>
-                <div class="card-art art-4">Pôr do Sol em Marte</div>
-                <div class="row-art"><div class="card-art art-7">Fita Cassete</div><div class="card-art art-8">Atlântico</div></div>
-              </div>
+        <div class="center">
+          <div class="phone lg-scene" id="phone">
+            <div class="lg-backdrop"><div class="feed" id="feed"></div></div>
+            <div class="lg-progressive-blur" data-direction="top" data-blur="18" style="height:110px;--lg-pb-tint:rgb(0 0 0 / .45)"></div>
+            <div class="phone-head">
+              <h4 id="phone-title">Início</h4>
+              <nav class="glass lg-tabs" aria-label="Layout" data-glass-appearance="dark" id="layout-tabs">
+                <div class="lg-tabs-list" role="tablist">
+                  <button role="tab" aria-selected="true" aria-label="Grade" data-layout="grid" style="min-height:30px;padding:0 9px"><svg aria-hidden="true" style="width:17px;height:17px"><use href="#i-grid"/></svg></button>
+                  <button role="tab" aria-label="Lista" data-layout="list" style="min-height:30px;padding:0 9px"><svg aria-hidden="true" style="width:17px;height:17px"><use href="#i-list"/></svg></button>
+                </div>
+              </nav>
             </div>
+            <div class="lg-progressive-blur" data-direction="bottom" data-blur="14" style="height:100px;--lg-pb-tint:rgb(0 0 0 / .5)"></div>
             <div class="phone-bottom">
-              <nav class="glass lg-tabs" data-size="large" aria-label="Seções" data-glass-appearance="dark">
+              <nav class="glass lg-tabs" data-size="large" aria-label="Seções" data-glass-appearance="dark" id="app-tabs">
                 <div class="lg-tabs-list" role="tablist">
                   <button role="tab" aria-selected="true"><svg aria-hidden="true"><use href="#i-home"/></svg>Início</button>
                   <button role="tab"><svg aria-hidden="true"><use href="#i-grid"/></svg>Explorar</button>
@@ -292,167 +331,18 @@
                   <button role="tab"><svg aria-hidden="true"><use href="#i-stack"/></svg>Biblioteca</button>
                 </div>
               </nav>
-              <button class="glass lg-button lg-icon search-orb" data-glass-interactive data-glass-appearance="dark" aria-label="Buscar"><svg><use href="#i-search"/></svg></button>
+              <button class="glass lg-button lg-icon orb" data-glass-interactive data-glass-appearance="dark" aria-label="Buscar"><svg><use href="#i-search"/></svg></button>
             </div>
           </div>
         </div>
-        <div class="code-view"></div>
-        <script type="text/plain" class="src"><nav class="glass lg-tabs" data-size="large" aria-label="Seções">
-  <div class="lg-tabs-list" role="tablist">
-    <button role="tab" aria-selected="true"><svg>…</svg>Início</button>
-    <button role="tab"><svg>…</svg>Explorar</button>
-    <button role="tab"><svg>…</svg>Rádio</button>
-    <button role="tab"><svg>…</svg>Biblioteca</button>
-  </div>
-</nav>
-
-<script>
-  // a lente arrastável é criada automaticamente
-  document.querySelector('.lg-tabs')
-    .addEventListener('lg:change', e => console.log('aba', e.detail.index));
-<\/script></script>
       </div>
-    </article>
+    </div>
 
-    <!-- 5. Controls -->
-    <article class="demo" id="controles">
-      <div class="demo-head">
-        <div>
-          <h3><span class="num">05</span>Slider e switch</h3>
-          <p>Controles do conteúdo ganham vidro só durante a interação: o knob vira uma gota que amplia o trilho por baixo. Baseados em <code>&lt;input&gt;</code> nativo — teclado e leitores de tela funcionam.</p>
-          <div class="hig"><b>HIG</b> Exceção à regra do conteúdo: sliders e toggles viram vidro quando ativados.</div>
-        </div>
-      </div>
-      <div class="stage lg-scene">
-        <div class="lg-backdrop"><div class="bg bg-dunes" style="background-position: 30% 80%"></div></div>
-        <div class="center stage-ui">
-          <div class="glass cc" data-glass-refraction="20" data-glass-bezel="22">
-            <div class="cc-row">
-              <div class="lbl"><span class="cc-ic" style="background:#0a84ff"><svg><use href="#i-wifi"/></svg></span><span>Wi‑Fi<small>Casa 5G</small></span></div>
-              <label class="lg-switch"><input type="checkbox" checked aria-label="Wi‑Fi"></label>
-            </div>
-            <div class="cc-row">
-              <div class="lbl"><span class="cc-ic" style="background:#0a84ff"><svg><use href="#i-bt"/></svg></span><span>Bluetooth<small>AirPods</small></span></div>
-              <label class="lg-switch"><input type="checkbox" checked aria-label="Bluetooth"></label>
-            </div>
-            <div class="cc-row">
-              <div class="lbl"><span class="cc-ic" style="background:#5e5ce6"><svg><use href="#i-moon"/></svg></span><span>Foco<small>Desativado</small></span></div>
-              <label class="lg-switch"><input type="checkbox" aria-label="Foco"></label>
-            </div>
-            <hr>
-            <div class="cc-slider"><svg aria-hidden="true"><use href="#i-sun-lo"/></svg><div class="lg-slider"><input type="range" min="0" max="100" value="64" aria-label="Brilho"></div><svg aria-hidden="true"><use href="#i-sun"/></svg></div>
-            <div class="cc-slider"><svg aria-hidden="true"><use href="#i-vol-lo"/></svg><div class="lg-slider"><input type="range" min="0" max="100" value="38" aria-label="Volume"></div><svg aria-hidden="true"><use href="#i-vol-hi"/></svg></div>
-          </div>
-        </div>
-        <div class="code-view"></div>
-        <script type="text/plain" class="src"><!-- Switch: checkbox nativo, knob de vidro gerado pelo JS -->
-<label class="lg-switch">
-  <input type="checkbox" checked aria-label="Wi-Fi">
-</label>
-
-<!-- Slider: range nativo (teclado e leitor de tela ok) -->
-<div class="lg-slider">
-  <input type="range" min="0" max="100" value="64" aria-label="Brilho">
-</div>
-
-<!-- cores: --lg-switch-on, --lg-slider-fill --></script>
-      </div>
-    </article>
-
-    <!-- 6. Progressive blur -->
-    <article class="demo" id="progressive">
-      <div class="demo-head">
-        <div>
-          <h3><span class="num">06</span>Desfoque progressivo</h3>
-          <p>O <i>scroll edge effect</i>: o conteúdo que rola por baixo das barras é desfocado em degraus, mantendo os controles legíveis.</p>
-          <div class="hig"><b>HIG</b> Barras com conteúdo rolando por baixo devem usar o efeito de borda de rolagem.</div>
-        </div>
-      </div>
-      <div class="stage lg-scene">
-        <div class="lg-backdrop"><div class="bg bg-bokeh" style="filter:saturate(.7) brightness(.6)"></div></div>
-        <div class="center stage-ui">
-          <div class="phone lg-scene" id="lib-phone">
-            <div class="lg-backdrop">
-              <div class="lib-grid" id="lib-grid"></div>
-            </div>
-            <div class="lg-progressive-blur" data-direction="top" data-blur="20" style="height:120px;--lg-pb-tint:rgb(0 0 0 / .45)"></div>
-            <div class="lib-head">
-              <h4>Biblioteca</h4>
-              <nav class="glass lg-tabs" aria-label="Layout" data-glass-appearance="dark">
-                <div class="lg-tabs-list" role="tablist">
-                  <button role="tab" aria-selected="true" aria-label="Grade" data-layout="grid"><svg aria-hidden="true" style="width:19px;height:19px"><use href="#i-grid"/></svg></button>
-                  <button role="tab" aria-label="Lista" data-layout="list"><svg aria-hidden="true" style="width:19px;height:19px"><use href="#i-list"/></svg></button>
-                </div>
-              </nav>
-            </div>
-            <div class="lg-progressive-blur" data-direction="bottom" data-blur="16" style="height:110px;--lg-pb-tint:rgb(0 0 0 / .5)"></div>
-            <div class="phone-bottom" style="justify-content:center">
-              <div class="glass player" data-glass-appearance="dark" style="padding:9px 10px 9px 9px;border-radius:24px">
-                <div class="player-top" style="gap:10px">
-                  <div class="cover cover-1" style="width:40px;height:40px;border-radius:10px"></div>
-                  <div class="meta"><b style="font-size:14.5px">Maré Alta</b><span style="font-size:12.5px">Os Satélites</span></div>
-                  <button class="icon-btn" aria-label="Tocar"><svg><use href="#i-play"/></svg></button>
-                  <button class="icon-btn" aria-label="Próxima"><svg><use href="#i-fwd"/></svg></button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="code-view"></div>
-        <script type="text/plain" class="src"><div class="scroller">…conteúdo…</div>
-
-<!-- camadas de blur com máscaras em degrau, geradas pelo JS -->
-<div class="lg-progressive-blur"
-     data-direction="top"   data-blur="20" data-layers="6"
-     style="height:120px; --lg-pb-tint: rgb(0 0 0 / .45)"></div>
-
-<header class="bar">…título e controles de vidro…</header></script>
-      </div>
-    </article>
-
-    <!-- 7. Magnifier -->
-    <article class="demo" id="lupa">
-      <div class="demo-head">
-        <div>
-          <h3><span class="num">07</span>Lupa</h3>
-          <p>Uma gota de vidro arrastável com <code>data-glass-magnify</code>. Jogue-a: ela desliza com inércia e quica nas bordas.</p>
-        </div>
-      </div>
-      <div class="stage lg-scene">
-        <div class="lg-backdrop reading">
-          <h4>Sobre a refração</h4>
-          <div class="cols">
-            <p>Quando a luz passa do ar para o vidro, ela desacelera e muda de direção. A borda de uma gota é curva, então cada ponto da borda inclina a luz de um jeito diferente — é isso que faz o mundo atrás do vidro parecer dobrar perto das bordas.</p>
-            <p>Esta biblioteca modela a borda como um chanfro convexo. Para cada pixel calculamos de onde o raio refratado vem — sempre um pouco mais para dentro — e guardamos esse desvio como um vetor num mapa de deslocamento.</p>
-            <p>O navegador faz o resto: o filtro SVG <code>feDisplacementMap</code> lê o mapa e entorta o fundo em tempo real, pixel por pixel, a cada quadro.</p>
-            <p>Arraste a lente por cima deste texto e veja as letras se curvarem na borda e crescerem no centro — com as cores se separando levemente, como num prisma.</p>
-          </div>
-        </div>
-        <div class="glass mag-lens" data-glass="clear" data-glass-draggable data-glass-interactive
-             data-glass-magnify="1.4" data-glass-refraction="12" data-glass-bezel="30"
-             data-glass-appearance="light" tabindex="0" role="img" aria-label="Lupa arrastável"></div>
-        <div class="code-view"></div>
-        <script type="text/plain" class="src"><div class="glass lens"
-     data-glass="clear"
-     data-glass-draggable
-     data-glass-magnify="1.4"
-     data-glass-refraction="12"
-     data-glass-bezel="30"
-     style="position:absolute; width:190px; height:190px; border-radius:50%"></div></script>
-      </div>
-    </article>
-    <!-- 8. Morph -->
-    <article class="demo" id="morph">
-      <div class="demo-head">
-        <div>
-          <h3><span class="num">08</span>Morph líquido</h3>
-          <p>Elementos dentro de um <code>data-glass-group</code> viram <b>uma única superfície</b>: arraste a gota até a toolbar e veja as formas se fundirem com um pescoço — ou toque em <b>+</b> para um botão brotar do vidro.</p>
-          <div class="hig"><b>HIG</b> Equivale ao <code>GlassEffectContainer</code>: vidro não amostra vidro, então formas próximas se fundem.</div>
-        </div>
-      </div>
-      <div class="stage lg-scene">
+    <!-- 13 Morph -->
+    <div class="cell wide"><h2>Morph líquido</h2>
+      <div class="stage lg-scene" data-glass-appearance="light">
         <div class="lg-backdrop"><div class="bg bg-grid"></div></div>
-        <div class="morph-zone" data-glass-group data-glass-merge="26" data-glass-appearance="light" id="morph-group">
+        <div class="morph-zone" data-glass-group data-glass-merge="26" id="morph-group">
           <div class="glass lg-toolbar morph-bar" role="toolbar" aria-label="Edição">
             <button aria-label="Desfazer"><svg><use href="#i-undo"/></svg></button>
             <button aria-label="Refazer"><svg><use href="#i-redo"/></svg></button>
@@ -460,151 +350,55 @@
             <button aria-label="Adicionar" id="morph-add" aria-expanded="false"><svg><use href="#i-plus"/></svg></button>
           </div>
           <button class="glass lg-button lg-icon morph-bud" id="morph-bud" data-glass-interactive aria-label="Favoritar" tabindex="-1"><svg><use href="#i-heart"/></svg></button>
-          <div class="glass morph-drop" data-glass-draggable tabindex="0" role="img" aria-label="Gota de vidro arrastável"></div>
+          <div class="glass morph-drop" data-glass-draggable tabindex="0" role="img" aria-label="Gota de vidro"></div>
+          <div class="glass morph-drop d2" data-glass-draggable tabindex="0" role="img" aria-label="Gota de vidro"></div>
         </div>
-        <div class="code-view"></div>
-        <script type="text/plain" class="src"><!-- Tudo dentro do grupo vira uma superfície só -->
-<div data-glass-group data-glass-merge="26">
-  <div class="glass lg-toolbar">…</div>
-  <button class="glass lg-button lg-icon">♥</button>
-  <div class="glass" data-glass-draggable
-       style="position:absolute; width:120px; height:120px; border-radius:50%"></div>
-</div>
-
-<!-- data-glass-merge: distância (px) em que as formas começam a se fundir --></script>
+        <p class="status" style="color:#111;text-shadow:none">Arraste as gotas até a barra · toque em +</p>
       </div>
-    </article>
-  </div>
-</section>
+    </div>
 
-<!-- ======================= PLAYGROUND ======================= -->
-<section class="block" id="playground">
-  <div class="wrap">
-    <div class="eyebrow">Playground</div>
-    <h2>Afine o vidro.</h2>
-    <p class="sub">Cada parâmetro muda a física do material em tempo real. O código à direita é exatamente o que você cola no seu HTML.</p>
-
-    <div class="pg">
-      <div class="stage pg-stage lg-scene" id="pg-stage">
-        <div class="lg-backdrop"><div class="bg bg-aurora" id="pg-bg"></div></div>
-        <div class="glass pg-target" id="pg-target" data-glass-draggable data-glass-interactive tabindex="0">Liquid Glass</div>
-      </div>
-      <div class="pg-panel" id="pg-panel">
-        <h4>Material</h4>
-        <nav class="glass lg-tabs" aria-label="Variante" id="pg-variant" data-glass-appearance="dark">
-          <div class="lg-tabs-list" role="tablist">
-            <button role="tab" aria-selected="true" data-v="regular">Regular</button>
-            <button role="tab" data-v="clear">Clear</button>
-          </div>
-        </nav>
-        <div class="ctl"><div class="ctl-top"><label for="pg-refraction">Refração</label><output data-for="refraction">20px</output></div><div class="lg-slider"><input id="pg-refraction" data-k="refraction" data-u="px" type="range" min="0" max="60" value="20"></div></div>
-        <div class="ctl"><div class="ctl-top"><label for="pg-bezel">Bisel (borda curva)</label><output data-for="bezel">16px</output></div><div class="lg-slider"><input id="pg-bezel" data-k="bezel" data-u="px" type="range" min="2" max="75" value="16"></div></div>
-        <div class="ctl"><div class="ctl-top"><label for="pg-magnify">Ampliação</label><output data-for="magnify">1×</output></div><div class="lg-slider"><input id="pg-magnify" data-k="magnify" data-u="×" type="range" min="1" max="1.8" step="0.01" value="1"></div></div>
-        <div class="ctl"><div class="ctl-top"><label for="pg-dispersion">Dispersão cromática</label><output data-for="dispersion">0</output></div><div class="lg-slider"><input id="pg-dispersion" data-k="dispersion" data-u="" type="range" min="0" max="0.6" step="0.01" value="0"></div></div>
-        <div class="ctl"><div class="ctl-top"><label for="pg-blur">Desfoque</label><output data-for="blur">7px</output></div><div class="lg-slider"><input id="pg-blur" data-k="blur" data-u="px" type="range" min="0" max="20" step="0.5" value="7"></div></div>
-        <div class="ctl"><div class="ctl-top"><label for="pg-radius">Raio</label><output data-for="radius">75px</output></div><div class="lg-slider"><input id="pg-radius" data-k="radius" data-u="px" type="range" min="0" max="75" value="75"></div></div>
-        <div class="ctl-row"><span>Tint</span>
-          <div class="swatches" id="pg-tints">
-            <button aria-label="Sem tint" aria-pressed="true" data-tint="" style="background:linear-gradient(135deg,#fff3,#fff1)"></button>
-            <button aria-label="Azul" data-tint="#0a84ff" style="background:#0a84ff"></button>
-            <button aria-label="Rosa" data-tint="#ff375f" style="background:#ff375f"></button>
-            <button aria-label="Verde" data-tint="#30d158" style="background:#30d158"></button>
-            <button aria-label="Roxo" data-tint="#bf5af2" style="background:#bf5af2"></button>
+    <!-- 14 Lens -->
+    <div class="cell wide"><h2>Lupa</h2>
+      <div class="stage lg-scene" data-glass-appearance="light">
+        <div class="lg-backdrop reading">
+          <h3>Sobre o vidro</h3>
+          <div class="cols">
+            <p>Quando a luz atravessa um vidro grosso, ela se curva na borda. Por isso, perto da beira de uma gota, o mundo atrás parece se esticar e acompanhar a curva — e no centro fica quase intacto.</p>
+            <p>Esta biblioteca calcula, para cada pixel, a distância até a borda e a direção dela, e guarda num mapa o quanto o fundo deve ser puxado para dentro. O navegador aplica o mapa em tempo real.</p>
+            <p>Por cima vem o material: um vidro fosco que clareia ou escurece o fundo, uma curva de tom e um brilho fino no contorno, mais forte em cima e embaixo, como a luz batendo numa peça real.</p>
+            <p>Arraste a lupa e jogue: ela desliza com inércia e quica nas bordas. Dois cliques alternam o zoom.</p>
           </div>
         </div>
-        <div class="ctl-row"><span>Fundo</span>
-          <div class="swatches" id="pg-bgs">
-            <button aria-label="Aurora" aria-pressed="true" data-bg="bg-aurora" style="background:url(examples/assets/aurora.jpg) center/cover"></button>
-            <button aria-label="Dunas" data-bg="bg-dunes" style="background:url(examples/assets/dunes.jpg) center/cover"></button>
-            <button aria-label="Bokeh" data-bg="bg-bokeh" style="background:url(examples/assets/bokeh.jpg) center/cover"></button>
-            <button aria-label="Névoa" data-bg="bg-mist" style="background:url(examples/assets/mist.jpg) center/cover"></button>
+        <div class="glass mag" id="mag" data-glass="clear" data-glass-draggable data-glass-interactive data-glass-magnify="1.5" data-glass-refraction="28" tabindex="0" role="img" aria-label="Lupa arrastável"></div>
+      </div>
+    </div>
+
+    <!-- Install -->
+    <div class="cell wide" id="instalar"><h2>Instalar</h2>
+      <div class="stage lg-scene" data-glass-appearance="light">
+        <div class="lg-backdrop"><div class="bg bg-desert" style="background-position:center 60%"></div></div>
+        <div class="center">
+          <div class="glass install">
+            <h3>Use no seu projeto</h3>
+            <nav class="glass lg-tabs" aria-label="Forma de instalar" id="install-tabs">
+              <div class="lg-tabs-list" role="tablist">
+                <button role="tab" aria-selected="true">Plugin</button>
+                <button role="tab">Skill</button>
+                <button role="tab">CDN</button>
+              </div>
+            </nav>
+            <div class="cmd"><span id="cmd-text"></span><button class="glass lg-button" data-size="small" data-glass-interactive id="copy"><span class="lbl">Copiar</span></button></div>
           </div>
         </div>
-        <div class="ctl-row"><span>Aparência escura</span><label class="lg-switch"><input type="checkbox" id="pg-dark" checked aria-label="Aparência escura"></label></div>
-        <div class="pg-code"><pre class="code" id="pg-code"></pre><button class="copy" data-copy="#pg-code">Copiar</button></div>
       </div>
     </div>
+
   </div>
-</section>
-
-<!-- ======================= HOW ======================= -->
-<section class="block" id="como-funciona">
-  <div class="wrap">
-    <div class="eyebrow">Como funciona</div>
-    <h2>Ótica de verdade, no navegador.</h2>
-    <p class="sub">Nada de imagens pré-renderizadas: o mapa de refração é calculado por JavaScript para o tamanho e o raio exatos de cada elemento.</p>
-
-    <div class="how">
-      <div class="how-card">
-        <div class="viz"><canvas id="viz-profile" width="560" height="340" aria-label="Curva do perfil de refração"></canvas></div>
-        <h4>1. Perfil da lente</h4>
-        <p>Na borda curva o raio de luz entorta <b>para dentro</b>: cada pixel mostra o conteúdo um pouco mais ao centro. O aumento cresce suavemente até a borda — sem dobras — e some no centro plano.</p>
-      </div>
-      <div class="how-card">
-        <div class="viz"><img id="viz-map" alt="Mapa de deslocamento do elemento do playground"></div>
-        <h4>2. Mapa de deslocamento</h4>
-        <p>O desvio vira um vetor em R/G (128 = parado). Este é o mapa real do elemento do playground — o <code>feDisplacementMap</code> do SVG entorta o fundo com ele.</p>
-      </div>
-      <div class="how-card">
-        <div class="viz" style="background:url(examples/assets/dunes.jpg) center/cover"><div class="glass" style="width:70%;height:96px;border-radius:48px" data-glass-refraction="18"></div></div>
-        <h4>3. Luz, tint e molas</h4>
-        <p>Por cima: luminosidade comprimida (legibilidade), um aro especular cônico que segue o ponteiro, brilho no ponto de toque e molas físicas interruptíveis.</p>
-      </div>
-    </div>
-
-    <div class="modes">
-      <div class="mode"><b>Chromium · <code>backdrop</code></b><span>Refração ao vivo de <i>qualquer</i> coisa atrás do elemento, via <code>backdrop-filter: url(#svg)</code>.</span></div>
-      <div class="mode"><b>Safari e Firefox · <code>scene</code></b><span>Envolva o fundo em <code>.lg-scene &gt; .lg-backdrop</code> e a mesma ótica roda como um filtro de lentes sobre ele.</span></div>
-      <div class="mode"><b>Fallback · <code>blur</code></b><span>Sem cena? Vira um vidro fosco elegante com o mesmo aro, tint e molas. Nunca quebra.</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- ======================= SKILL ======================= -->
-<section class="block" id="skill">
-  <div class="wrap">
-    <div class="eyebrow">Skill para agentes</div>
-    <h2>Peça. O Claude constrói.</h2>
-    <p class="sub">A pasta <code>skills/liquid-glass</code> ensina o Claude (e outros agentes) a aplicar este material corretamente — com as regras do HIG, a API, receitas de componentes e as pegadinhas de cada navegador.</p>
-
-    <div class="install">
-      <div class="install-card">
-        <h4>Claude Code — plugin</h4>
-        <p>Adicione o marketplace e instale o plugin com a skill.</p>
-        <div class="snippet"><pre id="ins-1">/plugin marketplace add asimov-academy/liquid-glass-skill
-/plugin install liquid-glass@asimov-academy</pre><button class="copy" data-copy="#ins-1">Copiar</button></div>
-      </div>
-      <div class="install-card">
-        <h4>Manual — qualquer agente</h4>
-        <p>Copie a pasta da skill para o diretório de skills.</p>
-        <div class="snippet"><pre id="ins-2">git clone https://github.com/asimov-academy/liquid-glass-skill
-cp -r liquid-glass-skill/skills/liquid-glass ~/.claude/skills/</pre><button class="copy" data-copy="#ins-2">Copiar</button></div>
-      </div>
-      <div class="install-card">
-        <h4>Só a biblioteca</h4>
-        <p>Dois arquivos, sem dependências. Via jsDelivr:</p>
-        <div class="snippet"><pre id="ins-3">&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/asimov-academy/liquid-glass-skill@main/dist/liquid-glass.css"&gt;
-&lt;script src="https://cdn.jsdelivr.net/gh/asimov-academy/liquid-glass-skill@main/dist/liquid-glass.js"&gt;&lt;/script&gt;</pre><button class="copy" data-copy="#ins-3">Copiar</button></div>
-      </div>
-      <div class="install-card">
-        <h4>Experimente pedir</h4>
-        <ul class="prompt-list">
-          <li>“Cria uma landing page com navbar de Liquid Glass sobre um vídeo.”</li>
-          <li>“Transforma o player deste site num card de vidro estilo iOS 26.”</li>
-          <li>“Faz uma tab bar com a lente líquida arrastável.”</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
 </main>
 
 <footer>
-  <div class="wrap">
-    <span>Feito com <span aria-label="vidro">💧</span> pela <a href="https://asimov.academy">Asimov Academy</a> · Licença MIT</span>
-    <span>Inspirado no <a href="https://developer.apple.com/design/human-interface-guidelines/materials">HIG da Apple</a>. Não afiliado à Apple Inc.</span>
-  </div>
+  <span>Asimov Academy · MIT · <a href="https://github.com/asimov-academy/liquid-glass-skill">GitHub</a></span>
+  <span>Material baseado em <a href="https://github.com/Glass-HQ/liquid-glass">Glass-HQ/liquid-glass</a> (MIT). Não afiliado à Apple.</span>
 </footer>
 
 <script src="dist/liquid-glass.js"></script>

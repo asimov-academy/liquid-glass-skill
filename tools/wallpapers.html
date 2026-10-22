@@ -40,6 +40,76 @@ function grain(alpha = 10) {
 }
 
 const scenes = {
+  // Day desert: hazy warm sky, rocky ridges with real 2D texture, pale dunes.
+  desert() {
+    // 2D gradient (Perlin) noise — no grid artifacts
+    const N = 256, perm2 = new Uint8Array(512), gx2 = new Float32Array(N), gy2 = new Float32Array(N);
+    for (let i = 0; i < N; i++) { const a = rnd() * Math.PI * 2; gx2[i] = Math.cos(a); gy2[i] = Math.sin(a); perm2[i] = i; }
+    for (let i = N - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [perm2[i], perm2[j]] = [perm2[j], perm2[i]]; }
+    for (let i = 0; i < N; i++) perm2[i + N] = perm2[i];
+    const q5 = t => t * t * t * (t * (t * 6 - 15) + 10);
+    const n2 = (x, y) => {
+      const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, X = xi & 255, Y = yi & 255;
+      const g = (ix, iy, dx, dy) => { const h = perm2[perm2[ix] + iy]; return gx2[h] * dx + gy2[h] * dy; };
+      const u = q5(fx), v = q5(fy);
+      const a = g(X, Y, fx, fy), b = g(X + 1, Y, fx - 1, fy), c = g(X, Y + 1, fx, fy - 1), d = g(X + 1, Y + 1, fx - 1, fy - 1);
+      return 0.5 + 0.7 * (a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v);
+    };
+    const f2 = (x, y, o = 6) => { let v = 0, a = 0.5, f = 1; for (let i = 0; i < o; i++) { v += a * n2(x * f, y * f); a *= 0.5; f *= 2.02; } return v; };
+    const img = ctx.createImageData(W, H), d = img.data;
+    const ridges = [
+      { base: 0.30, amp: 0.10, f: 0.0013, col: [176, 160, 140], haze: 0.62 },
+      { base: 0.38, amp: 0.14, f: 0.0017, col: [140, 122, 102], haze: 0.42 },
+      { base: 0.47, amp: 0.15, f: 0.0022, col: [104, 88, 72], haze: 0.24 },
+      { base: 0.58, amp: 0.14, f: 0.0029, col: [78, 64, 52], haze: 0.10 },
+    ];
+    const tops = ridges.map((r, k) => Float32Array.from({ length: W }, (_, x) => {
+      const n = fbm(x * r.f + k * 13.7, 6), ridge = Math.pow(1 - Math.abs(n * 2 - 1), 1.6);
+      return H * (r.base - r.amp * (0.35 * n + 0.75 * ridge));
+    }));
+    const dune = x => H * (0.80 - 0.07 * Math.sin(x * 0.0021 + 0.6) - 0.05 * fbm(x * 0.0009 + 3, 3) + 0.02 * Math.sin(x * 0.006));
+    const dune2 = x => H * (0.90 - 0.05 * Math.sin(x * 0.0017 + 2.4) - 0.04 * fbm(x * 0.0012 + 9, 3));
+    const sky = y => { const t = y / (H * 0.6); return [lerp(196, 233, t), lerp(200, 214, t), lerp(196, 188, t)]; };
+    function lerp(a, b, t) { t = Math.max(0, Math.min(1, t)); return a + (b - a) * t; }
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      let c = sky(y);
+      for (let k = 0; k < ridges.length; k++) {
+        const r = ridges[k], top = tops[k][x];
+        if (y >= top) {
+          const depth = (y - top) / H;
+          // ridged multifractal height → lit from the upper left: crisp rocky facets
+          const hgt = (xx, yy) => { let v = 0, a = 0.55, f = 1; for (let o = 0; o < 5; o++) { const nn = 1 - Math.abs(n2(xx * f + k * 31, yy * f) * 2 - 1); v += a * nn * nn * nn; a *= 0.47; f *= 2.2; } return v; };
+          const sx = 0.0085 * (1 + k * 0.12), sy = 0.0032 * (1 + k * 0.12);
+          const wx = x + (n2(x * 0.004, y * 0.004 + k) - 0.5) * 160; // domain warp → branching gullies
+          const h0 = hgt(wx * sx, y * sy), hx = hgt((wx + 1.5) * sx, y * sy), hy = hgt(wx * sx, (y + 1.5) * sy);
+          const lit = (h0 - hx) * 4.5 + (h0 - hy) * 3;
+          const fine = n2(x * 0.11, y * 0.08) - 0.5;
+          const big = n2(x * 0.0025 + k * 7, y * 0.004) - 0.5;
+          let shade = 0.8 + lit * (0.8 + k * 0.2) + (h0 - 0.45) * 0.3 + big * 0.45 + fine * 0.05 - depth * 0.5;
+          const base = r.col.map(v => v * shade);
+          const sk = sky(top);
+          const hz = r.haze + (1 - r.haze) * 0.15 * Math.exp(-depth * 18);
+          c = base.map((v, i) => v * (1 - hz) + sk[i] * hz);
+        }
+      }
+      const dy = dune(x), dy2 = dune2(x);
+      if (y >= dy) {
+        const t = (y - dy) / H, rip = Math.sin(x * 0.035 + y * 0.22 + 6 * fbm(x * 0.003, 2)) * 0.5 + 0.5;
+        const v = 236 - t * 120 + rip * 9 - (y < dy + 3 ? 0 : 0);
+        c = [v, v * 0.95, v * 0.88];
+      }
+      if (y >= dy2) {
+        const t = (y - dy2) / H, rip = Math.sin(x * 0.05 + y * 0.3 + 5 * fbm(x * 0.004 + 7, 2)) * 0.5 + 0.5;
+        const v = 214 - t * 140 + rip * 8;
+        c = [v, v * 0.95, v * 0.88];
+      }
+      const p = (y * W + x) * 4;
+      d[p] = c[0]; d[p + 1] = c[1]; d[p + 2] = c[2]; d[p + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    grain(7);
+  },
+
   dunes() {
     const sky = ctx.createLinearGradient(0, 0, 0, H * 0.62);
     sky.addColorStop(0, '#0b1426');

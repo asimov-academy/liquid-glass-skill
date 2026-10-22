@@ -1,10 +1,13 @@
 /*!
- * Liquid Glass for the web — v1.0.0
- * Apple-style Liquid Glass (refraction, specular rim, interactive springs)
- * in pure HTML, CSS and JavaScript. No framework, no build step.
+ * Liquid Glass for the web — v2.0.0
+ * Apple-style Liquid Glass in pure HTML, CSS and JavaScript. No framework, no build step.
  *
  * https://github.com/asimov-academy/liquid-glass-skill
  * MIT License — Asimov Academy
+ *
+ * The material model (frost/fill backdrop, tone curves, edge refraction
+ * profile and rim lighting) is a vanilla-JS port of Glass-HQ/liquid-glass
+ * (https://github.com/Glass-HQ/liquid-glass), MIT License, © 2026 Glass HQ.
  */
 (function (root, factory) {
   var api = factory(root);
@@ -16,7 +19,7 @@
   if (!win || !win.document) return {};
   var doc = win.document;
   var SVG_NS = 'http://www.w3.org/2000/svg';
-  var VERSION = '1.0.0';
+  var VERSION = '2.0.0';
 
   /* ------------------------------------------------------------------ *
    * Environment
@@ -34,6 +37,7 @@
   var mqReduceMotion = media('(prefers-reduced-motion: reduce)');
   var mqReduceTransparency = media('(prefers-reduced-transparency: reduce)');
   var mqMoreContrast = media('(prefers-contrast: more)');
+  var mqDark = media('(prefers-color-scheme: dark)');
 
   var supports = {
     backdropRefraction: isChromium,
@@ -42,30 +46,34 @@
   };
 
   /* ------------------------------------------------------------------ *
-   * Defaults
+   * Materials (calibrated values from Glass-HQ/liquid-glass, MIT)
    * ------------------------------------------------------------------ */
 
-  var VARIANTS = {
-    // Regular: blurs + compresses luminosity so text on top stays legible.
-    regular: { blur: 7, saturation: 1.45, brightness: 1.03, contrast: 0.9 },
-    // Clear: highly translucent, for media-rich backgrounds (add a dim layer on bright content).
-    clear: { blur: 0.5, saturation: 1.08, brightness: 1.02, contrast: 1 }
+  var MATERIALS = {
+    clear: {
+      blur: 0,
+      refraction: 60,
+      // selective shadow lift / highlight rolloff; middle tones preserved
+      light: { shadowLift: 0.18, highlightRolloff: 0 },
+      dark: { shadowLift: 0.15, highlightRolloff: 0.2 }
+    },
+    regular: {
+      blur: 7.33,
+      refraction: 60,
+      light: { fillSigma: 23, fillOpacity: 0.34, tone: [0.36, 0.67, -0.1113, 1.1031] },
+      dark: { fillSigma: 21.8, fillOpacity: 0.65, tone: [0.105, 0.83, -0.2091, 1.0648] }
+    }
   };
 
   var defaults = {
     variant: 'regular',   // 'regular' | 'clear'
-    refraction: null,     // max lateral bend at the rim, in px (null = auto from size)
-    bezel: null,          // width of the curved rim, in px (null = auto from size)
-    curvature: 4,         // squircle exponent of the rim profile (2 = circle, 4 = Apple-like)
-    dispersion: 0,        // chromatic aberration at the rim (0 – 0.5)
-    magnify: 1,           // lens zoom for the flat center (1 = none)
-    blur: null,           // px — null uses the variant value
-    saturation: null,
-    brightness: null,
-    contrast: null,
+    refraction: null,     // px the rim pulls the backdrop inward (null = auto from size, max 60)
+    bezel: 20,            // depth of the curved rim, px
+    magnify: 1,           // lens zoom of the flat center (1 = none)
+    dispersion: 0,        // chromatic aberration (0 – 0.5)
+    tint: null,           // '#rrggbb' — colored glass
     interactive: false,   // spring press / stretch / glow
-    mode: 'auto',         // 'auto' | 'backdrop' | 'scene' | 'fallback'
-    light: 'pointer'      // global: 'pointer' | 'fixed'
+    mode: 'auto'          // 'auto' | 'backdrop' | 'scene' | 'fallback'
   };
 
   /* ------------------------------------------------------------------ *
@@ -75,14 +83,13 @@
   var uid = 0;
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function lerp(a, b, t) { return a + (b - a) * t; }
-  function round(v, p) { var k = Math.pow(10, p || 2); return Math.round(v * k) / k; }
+  function round(v, p) { var k = Math.pow(10, p == null ? 2 : p); return Math.round(v * k) / k; }
   function el(tag, cls, parent) {
     var n = doc.createElement(tag);
     if (cls) n.className = cls;
     if (parent) parent.appendChild(n);
     return n;
   }
-  function camel(s) { return s.replace(/-([a-z])/g, function (_, c) { return c.toUpperCase(); }); }
   function parseVal(v) {
     if (v === '' || v === 'true') return true;
     if (v === 'false') return false;
@@ -91,10 +98,11 @@
   function readAttrOptions(node) {
     var out = {};
     var ds = node.dataset || {};
-    if (ds.glass && ds.glass !== 'true' && VARIANTS[ds.glass]) out.variant = ds.glass;
+    if (ds.glass && ds.glass !== 'true' && MATERIALS[ds.glass]) out.variant = ds.glass;
     for (var k in ds) {
       if (k.indexOf('glass') === 0 && k.length > 5) {
         var key = k.charAt(5).toLowerCase() + k.slice(6);
+        if (key === 'appearance' || key === 'scene' || key === 'backdrop' || key === 'group') continue;
         out[key] = parseVal(ds[k]);
       }
     }
@@ -103,27 +111,32 @@
   function assign(t) {
     for (var i = 1; i < arguments.length; i++) {
       var s = arguments[i];
-      if (s) for (var k in s) if (s[k] !== undefined && s[k] !== null) t[k] = s[k];
+      if (s) for (var k in s) if (s[k] !== undefined) t[k] = s[k];
     }
     return t;
   }
   function resolveOptions(node, opts) {
     var o = assign({}, defaults, readAttrOptions(node), opts);
-    var v = VARIANTS[o.variant] || VARIANTS.regular;
-    if (o.blur == null) o.blur = v.blur;
-    if (o.saturation == null) o.saturation = v.saturation;
-    if (o.brightness == null) o.brightness = v.brightness;
-    if (o.contrast == null) o.contrast = v.contrast;
-    o.refraction = o.refraction == null ? null : +o.refraction; o.bezel = o.bezel == null ? null : +o.bezel; o.dispersion = clamp(+o.dispersion || 0, 0, 0.8);
-    o.magnify = +o.magnify || 1; o.curvature = clamp(+o.curvature || 4, 1.5, 8);
+    if (!MATERIALS[o.variant]) o.variant = 'regular';
+    o.refraction = o.refraction == null || o.refraction === '' || isNaN(+o.refraction) ? null : +o.refraction;
+    o.bezel = clamp(+o.bezel || 20, 2, 200);
+    o.magnify = +o.magnify || 1;
+    o.dispersion = clamp(+o.dispersion || 0, 0, 0.8);
+    o.tint = typeof o.tint === 'string' && /^#[\da-f]{6}$/i.test(o.tint) ? o.tint : null;
     return o;
   }
-  // Auto optics scale with the element: thicker glass for bigger shapes.
-  function optics(o, w, h) {
+  // Big surfaces bend the full 60px; small controls bend proportionally less,
+  // so the opposite rims never sample across each other.
+  function autoRefraction(o, w, h) {
+    if (o.refraction != null) return o.refraction;
     var md = Math.min(w, h);
-    var bez = o.bezel == null || isNaN(o.bezel) ? clamp(md * 0.3, 6, 90) : o.bezel;
-    var ref = o.refraction == null || isNaN(o.refraction) ? bez * foldFree(o.curvature) : o.refraction;
-    return assign({}, o, { bezel: bez, refraction: ref });
+    return clamp(md * 0.2 + Math.max(0, md - 60) * 0.9, 1.5, MATERIALS[o.variant].refraction);
+  }
+  function appearanceOf(node) {
+    var host = node.closest ? node.closest('[data-glass-appearance]') : null;
+    var a = host ? host.getAttribute('data-glass-appearance') : 'light';
+    if (a === 'auto') a = mqDark.matches ? 'dark' : 'light';
+    return a === 'dark' ? 'dark' : 'light';
   }
   function radiusOf(node, w, h) {
     var cs = win.getComputedStyle(node);
@@ -131,6 +144,9 @@
     var v = parseFloat(r) || 0;
     if (/%/.test(r)) v = Math.min(w, h) * v / 100;
     return clamp(v, 0, Math.min(w, h) / 2);
+  }
+  function tintChannels(hex) {
+    return hex ? [1, 3, 5].map(function (i) { return parseInt(hex.slice(i, i + 2), 16) / 255; }) : null;
   }
 
   /* ------------------------------------------------------------------ *
@@ -151,9 +167,8 @@
   }
 
   /**
-   * Critically-tunable damped spring (semi-implicit Euler, 240 Hz substeps).
-   * Springs keep their velocity when retargeted — that is what makes
-   * interrupted gestures feel continuous, the way Apple's do.
+   * Damped spring (semi-implicit Euler, 240 Hz substeps). Springs keep their
+   * velocity when retargeted, so interrupted gestures stay continuous.
    */
   function Spring(value, cfg) {
     cfg = cfg || {};
@@ -177,133 +192,115 @@
   };
 
   /* ------------------------------------------------------------------ *
-   * Displacement map — the optics
+   * Maps — the optics
    *
-   * The glass is modelled as a slab whose rim is a convex squircle bevel.
-   * For each pixel we take the signed distance to the rounded-rect edge,
-   * look up the surface slope of the bevel, refract a vertical view ray
-   * with Snell's law (n = 1.5) and store the resulting lateral shift as a
-   * vector in R/G. The flat center has zero shift (or a uniform zoom when
-   * `magnify` > 1). feDisplacementMap then bends the backdrop with it.
+   * For every pixel we take the signed distance d to the outline (negative
+   * inside) and the outward normal n. The rim is a circular bevel `bezel`
+   * px deep: edge(d) = 1 − √((2 − t)·t), t = clamp(−d / bezel). The field
+   * map stores −n·edge·refraction in R/G, so near the rim each pixel shows
+   * backdrop pulled from further inside — content stretches along the curve,
+   * exactly how thick glass bends light. Beyond the bevel the vector is 0.
+   *
+   * The overlay map is the rim lighting: a 0.9 px specular stroke on the
+   * top and bottom of the outline with a soft 4.5 px diffuse glow, and a
+   * thin dark line hugging the sides.
    * ------------------------------------------------------------------ */
 
-  var lutCache = {};
-  // Lens profile. A pixel at normalized depth t (0 = edge, 1 = start of the flat
-  // center) samples the backdrop at depth g(t), with g'(t) = t^q: the local
-  // magnification 1/g' grows smoothly toward the rim (infinite right at the
-  // edge, where content smears along the curve like real thick glass) and the
-  // mapping never folds, so text stays clean. g(1) = 1 and g'(1) = 1, so the
-  // bevel blends seamlessly into the flat, undistorted center.
-  function profileLUT(curvature) {
-    var key = curvature.toFixed(2);
-    if (lutCache[key]) return lutCache[key];
-    var N = 256, out = new Float32Array(N), q = Math.max(0.5, curvature - 1), k = q / (q + 1);
-    for (var i = 0; i < N; i++) {
-      var t = i / (N - 1);
-      var g = k + Math.pow(t, q + 1) / (q + 1); // sampled depth
-      out[i] = (g - t) / k;                      // normalized inward shift (1 at the edge)
-    }
-    lutCache[key] = out;
-    return out;
+  var COS_SPREAD = Math.cos(1.08), COS_DIFFUSE = Math.cos(1.08 * 0.65), COS_SIDE = Math.cos(0.98);
+  var MARGIN = 2; // maps cover the shape plus 2 px on every side
+
+  function edgeOf(d, bezel) {
+    var t = clamp(-d / bezel, 0, 1);
+    return 1 - clamp(Math.sqrt((2 - t) * t), 0, 1);
   }
-  // max shift (as a fraction of the bezel) that still never folds
-  function foldFree(curvature) { var q = Math.max(0.5, curvature - 1); return q / (q + 1); }
+  // rim lighting for one sample → [light (0–1), alpha (0–1)]
+  function rimLight(d, nx, ny, aa, dark) {
+    var cov = clamp(0.5 - d / aa, 0, 1);
+    var ay = Math.abs(ny);
+    var directional = Math.pow(clamp((ay - COS_SPREAD) / (1 - COS_SPREAD), 0, 1), 1.25);
+    var diffuseDir = Math.pow(clamp((ay - COS_DIFFUSE) / (1 - COS_DIFFUSE), 0, 1), 1.25);
+    var stroke = clamp((d + 0.9) / aa + 0.5, 0, 1) * cov;
+    var spec = directional * stroke;
+    spec = spec / (1 + 0.5 * (1 - spec));
+    var fall4 = 1 - clamp(-d / 4.5, 0, 1);
+    var diffuse = diffuseDir * 0.18 * fall4 * fall4 * cov;
+    var hl = clamp(spec * (dark ? 0.82 : 1) + diffuse * (dark ? 0.4 : 1), 0, 1);
+    var adj = d - 0.5, fall = 1 - clamp(-adj / 0.5, 0, 1);
+    var ramp = lerp(fall > 0 ? 1 : 0, fall, 0.75);
+    var outline = ramp * clamp((adj + 0.5) / aa + 0.5, 0, 1) * clamp(-adj / aa + 0.5, 0, 1);
+    var w1 = clamp((nx - COS_SIDE) / (1 - COS_SIDE), 0, 1) * outline;
+    var w2 = clamp((-nx - COS_SIDE) / (1 - COS_SIDE), 0, 1) * outline;
+    var shade = (w1 / (1 + 0.4 * (1 - w1)) + w2 / (1 + 0.4 * (1 - w2))) * (dark ? 0.6 : 0.48);
+    var alpha = hl + shade * (1 - hl);
+    return [alpha > 1e-5 ? (dark ? 0.82 : 1) * hl / alpha : 0, alpha];
+  }
 
-  var mapCache = new Map();
-  function makeMap(w, h, r, o) {
-    var key = [Math.round(w), Math.round(h), Math.round(r), o.refraction, o.bezel, o.curvature, o.magnify, o.hiRes ? 1 : 0].join('|');
-    var hit = mapCache.get(key);
-    if (hit) { mapCache.delete(key); mapCache.set(key, hit); return hit; }
+  function mapScale(w, h) {
+    var dpr = clamp(win.devicePixelRatio || 1, 1, 2);
+    var fit = Math.min(1, 4096 / ((w + 2 * MARGIN) * dpr), 4096 / ((h + 2 * MARGIN) * dpr));
+    return Math.max(0.25, dpr * fit);
+  }
 
-    // WebKit/Gecko upscale feImage without smoothing, so give them a denser map.
-    var s = o.hiRes ? clamp(1100 / Math.max(w, h), 1, 2) : clamp(720 / Math.max(w, h), 0.75, 2);
-    var W = Math.max(2, Math.round(w * s)), H = Math.max(2, Math.round(h * s));
-    var sx = W / w, sy = H / h;
-    var hw = w / 2, hh = h / 2;
-    r = Math.min(r, hw, hh);
-    var bez = Math.max(1, Math.min(o.bezel, Math.min(hw, hh)));
-    var lut = profileLUT(o.curvature);
+  // Shared writer: `sample(px, py)` returns [d, nx, ny] in CSS px, relative to
+  // the map's top-left (which sits MARGIN px outside the shape box).
+  function renderMaps(W, H, s, sample, o) {
     var zoomK = 1 / o.magnify - 1;
-    var maxD = Math.max(1, o.refraction + Math.abs(zoomK) * Math.max(hw, hh));
-
-    var cv = doc.createElement('canvas'); cv.width = W; cv.height = H;
-    var ctx = cv.getContext('2d');
-    var img = ctx.createImageData(W, H), d = img.data;
-    // bevel lighting (3D thickness): normals from a squircle height field, lit
-    // by a key light (top-left) and a weaker internal reflection (bottom-right)
-    var shc = doc.createElement('canvas'); shc.width = W; shc.height = H;
-    var shctx = shc.getContext('2d'), shimg = shctx.createImageData(W, H), sd8 = shimg.data;
-    var P = o.curvature, thick = 0.55, aa = Math.min(sx, sy);
-    var L1 = [-0.48, -0.66, 0.58], L2 = [0.48, 0.66, 0.58];
-    var nrm = function (v) { var l = Math.hypot(v[0], v[1], v[2]); return [v[0] / l, v[1] / l, v[2] / l]; };
-    L1 = nrm(L1); L2 = nrm(L2);
-    var H1 = nrm([L1[0], L1[1], L1[2] + 1]), H2 = nrm([L2[0], L2[1], L2[2] + 1]);
-    var flat1 = Math.pow(H1[2], 90), flat2 = Math.pow(H2[2], 90);
-    // The normal field uses a corner radius of at least the bezel width, so
-    // the inner bevel stays smooth (no mitred crease along the diagonals).
-    var rn = Math.max(r, Math.min(bez * 1.15, hw, hh));
-    var cx = hw - rn, cy = hh - rn, k = 127.5 / maxD;
-
+    var maxD = Math.max(1, o.refraction + Math.abs(zoomK) * Math.max(o.hw || 0, o.hh || 0));
+    var mk = function () { var c = doc.createElement('canvas'); c.width = W; c.height = H; return c; };
+    var cf = mk(), co = mk(), cm = mk();
+    var xf = cf.getContext('2d'), xo = co.getContext('2d'), xm = cm.getContext('2d');
+    var F = xf.createImageData(W, H), O = xo.createImageData(W, H), M = xm.createImageData(W, H);
+    var fd = F.data, od = O.data, md = M.data, aa = 1 / s, k = 0.5 / maxD;
     for (var j = 0; j < H; j++) {
-      var py = (j + 0.5) / sy - hh, ay = Math.abs(py), sgy = py < 0 ? -1 : 1;
-      var qy = ay - cy;
+      var y = (j + 0.5) / s;
       for (var i = 0; i < W; i++) {
-        var px = (i + 0.5) / sx - hw, ax = Math.abs(px), sgx = px < 0 ? -1 : 1;
-        var qx = ax - cx;
-        var nx, ny, sd;
-        if (qx > 0 && qy > 0) {
-          var l = Math.sqrt(qx * qx + qy * qy) || 1;
-          nx = qx / l * sgx; ny = qy / l * sgy; sd = l - rn;
-        } else if (qx > qy) {
-          nx = sgx; ny = 0; sd = qx - rn;
-        } else {
-          nx = 0; ny = sgy; sd = qy - rn;
-        }
-        var t = clamp(-sd / bez, 0, 1);
-        var fi = t * 255, i0 = fi | 0, m = (lut[i0] + (lut[Math.min(255, i0 + 1)] - lut[i0]) * (fi - i0)) * o.refraction;
-        // A view ray hitting the tilted bevel bends toward the inward normal, so
-        // each rim pixel shows content from further inside: the rim magnifies
-        // and drags the interior along the curve of the edge (like real glass).
-        var dx = -nx * m + px * zoomK, dy = -ny * m + py * zoomK;
-        var idx = (j * W + i) * 4;
-        d[idx] = clamp(Math.round(127.5 + dx * k), 0, 255);
-        d[idx + 1] = clamp(Math.round(127.5 + dy * k), 0, 255);
-        d[idx + 2] = 128;
-        d[idx + 3] = 255; // keep opaque: premultiplied alpha would corrupt vectors
-        var cov = clamp(0.5 - sd * aa, 0, 1);
-        if (cov > 0 && t < 1) {
-          var tt = Math.max(t, 1e-3), am = Math.pow(1 - tt, P);
-          var slope = Math.min(6, Math.pow(1 - am, 1 / P - 1) * Math.pow(1 - tt, P - 1) * thick);
-          var N3 = nrm([nx * slope, ny * slope, 1]);
-          var dif = (N3[0] * L1[0] + N3[1] * L1[1] + N3[2] * L1[2]) - L1[2];
-          var sp1 = Math.pow(Math.max(0, N3[0] * H1[0] + N3[1] * H1[1] + N3[2] * H1[2]), 90) - flat1;
-          var sp2 = Math.pow(Math.max(0, N3[0] * H2[0] + N3[1] * H2[1] + N3[2] * H2[2]), 90) - flat2;
-          var v = dif * 0.22 + sp1 * 0.75 + sp2 * 0.45;
-          var a8 = clamp(Math.abs(v) * (v > 0 ? 1 : 0.35), 0, 1) * cov;
-          var c8 = v > 0 ? 255 : 0;
-          sd8[idx] = c8; sd8[idx + 1] = c8; sd8[idx + 2] = c8; sd8[idx + 3] = Math.round(a8 * 255);
+        var x = (i + 0.5) / s, q = sample(x, y), d = q[0], nx = q[1], ny = q[2];
+        var e = edgeOf(Math.min(d, 0), o.bezel) * o.refraction * (q[3] == null ? 1 : q[3]);
+        var vx = -nx * e, vy = -ny * e;
+        if (zoomK) { vx += (x - o.cx) * zoomK; vy += (y - o.cy) * zoomK; }
+        var p = (j * W + i) * 4;
+        fd[p] = clamp(Math.round(255 * (0.5 + vx * k)), 0, 255);
+        fd[p + 1] = clamp(Math.round(255 * (0.5 + vy * k)), 0, 255);
+        fd[p + 2] = 128; fd[p + 3] = 255; // opaque: premultiplied alpha would corrupt vectors
+        var cov = clamp(0.5 - d / aa, 0, 1);
+        md[p] = md[p + 1] = md[p + 2] = 255; md[p + 3] = Math.round(cov * 255);
+        if (d > -6) {
+          var L = rimLight(d, nx, ny, aa, o.dark), v = Math.round(L[0] * 255);
+          od[p] = od[p + 1] = od[p + 2] = v; od[p + 3] = Math.round(L[1] * 255);
         }
       }
     }
-    ctx.putImageData(img, 0, 0);
-    shctx.putImageData(shimg, 0, 0);
+    xf.putImageData(F, 0, 0); xo.putImageData(O, 0, 0); xm.putImageData(M, 0, 0);
+    return { field: cf.toDataURL('image/png'), overlay: co.toDataURL('image/png'), mask: cm.toDataURL('image/png'), scale: 2 * maxD };
+  }
 
-    // Shape mask (anti-aliased) used by the cross-browser scene renderer.
-    var mv = doc.createElement('canvas'); mv.width = W; mv.height = H;
-    var mctx = mv.getContext('2d');
-    mctx.scale(sx, sy); mctx.fillStyle = '#fff'; mctx.beginPath();
-    if (mctx.roundRect) mctx.roundRect(0, 0, w, h, r);
-    else { mctx.moveTo(r, 0); mctx.arcTo(w, 0, w, h, r); mctx.arcTo(w, h, 0, h, r); mctx.arcTo(0, h, 0, 0, r); mctx.arcTo(0, 0, w, 0, r); }
-    mctx.fill();
-
-    var out = { disp: cv.toDataURL('image/png'), shade: shc.toDataURL('image/png'), mask: mv.toDataURL('image/png'), scale: 2 * maxD, reach: Math.max(0, zoomK) * Math.max(hw, hh) + 1 };
+  var mapCache = new Map();
+  function makeMaps(w, h, r, o) {
+    var s = mapScale(w, h);
+    var key = [round(w, 1), round(h, 1), round(r, 1), round(o.refraction, 2), o.bezel, o.magnify, o.dark ? 1 : 0, s].join('|');
+    var hit = mapCache.get(key);
+    if (hit) { mapCache.delete(key); mapCache.set(key, hit); return hit; }
+    var W = Math.max(2, Math.round((w + 2 * MARGIN) * s)), H = Math.max(2, Math.round((h + 2 * MARGIN) * s));
+    var hw = w / 2, hh = h / 2;
+    r = Math.min(r, hw, hh);
+    var ex = hw - r, ey = hh - r, ox = MARGIN + hw, oy = MARGIN + hh;
+    var sample = function (x, y) {
+      var px = x - ox, py = y - oy, ax = Math.abs(px), ay = Math.abs(py);
+      var qx = ax - ex, qy = ay - ey, sx = px < 0 ? -1 : 1, sy = py < 0 ? -1 : 1;
+      if (qx > 0 && qy > 0) {
+        var l = Math.sqrt(qx * qx + qy * qy) || 1;
+        return [l - r, qx / l * sx, qy / l * sy];
+      }
+      return qx > qy ? [qx - r, sx, 0] : [qy - r, 0, sy];
+    };
+    var out = renderMaps(W, H, s, sample, assign({}, o, { hw: hw, hh: hh, cx: ox, cy: oy }));
     mapCache.set(key, out);
     if (mapCache.size > 80) mapCache.delete(mapCache.keys().next().value);
     return out;
   }
 
   /* ------------------------------------------------------------------ *
-   * SVG host
+   * SVG host + material filter graph
    * ------------------------------------------------------------------ */
 
   var svgHost = null;
@@ -326,54 +323,92 @@
     defs().appendChild(f);
     return f;
   }
-  function rect(x, y, w, h) { return ' x="' + round(x) + '" y="' + round(y) + '" width="' + round(Math.max(0, w)) + '" height="' + round(Math.max(0, h)) + '"'; }
-  function img(href, res, r) {
-    return '<feImage href="' + href + '" xlink:href="' + href + '" preserveAspectRatio="none" result="' + res + '"' + r + '/>';
+  function rect(x, y, w, h) { return ' x="' + round(x, 3) + '" y="' + round(y, 3) + '" width="' + round(Math.max(0, w), 3) + '" height="' + round(Math.max(0, h), 3) + '"'; }
+  function img(href, res, attrs) {
+    return '<feImage href="' + href + '" xlink:href="' + href + '" preserveAspectRatio="none" result="' + res + '"' + attrs + '/>';
   }
-  // Displacement (+ optional chromatic dispersion: R/G/B bent by different amounts)
-  function displace(src, map, scale, disp, res, r, tag) {
-    tag = tag || '';
-    var DM = function (s, out) {
-      return '<feDisplacementMap in="' + src + '" in2="' + map + '" scale="' + round(s) + '" xChannelSelector="R" yChannelSelector="G" result="' + out + '"' + r + tag + '/>';
-    };
-    if (!disp) return DM(scale, res);
-    var R = '1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0', G = '0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0', B = '0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0';
-    return DM(scale * (1 + disp), res + 'r') + '<feColorMatrix in="' + res + 'r" type="matrix" values="' + R + '" result="' + res + 'cr"' + r + '/>' +
-      DM(scale, res + 'g') + '<feColorMatrix in="' + res + 'g" type="matrix" values="' + G + '" result="' + res + 'cg"' + r + '/>' +
-      DM(scale * (1 - disp), res + 'b') + '<feColorMatrix in="' + res + 'b" type="matrix" values="' + B + '" result="' + res + 'cb"' + r + '/>' +
-      '<feBlend in="' + res + 'cr" in2="' + res + 'cg" mode="screen" result="' + res + 'rg"' + r + '/>' +
-      '<feBlend in="' + res + 'rg" in2="' + res + 'cb" mode="screen" result="' + res + '"' + r + '/>';
+  function table(fn) {
+    var a = [];
+    for (var n = 0; n <= 32; n++) a.push(round(fn(n / 32), 4));
+    return a.join(' ');
   }
-
-  /* ------------------------------------------------------------------ *
-   * Global specular light
-   * ------------------------------------------------------------------ */
-
-  var lightBound = false;
-  function bindLight(mode) {
-    if (lightBound || mode === 'fixed' || mqReduceMotion.matches) return;
-    lightBound = true;
-    var tx = 0.5, ty = 0.5, queued = false, rootStyle = doc.documentElement.style;
-    function apply() {
-      queued = false;
-      var a = -45 + (tx - 0.5) * 50 + (ty - 0.5) * 18;
-      rootStyle.setProperty('--lg-light-angle', round(a, 1) + 'deg');
+  function toneTable(o, dark) {
+    if (o.variant === 'regular') {
+      var spec = dark ? MATERIALS.regular.dark : MATERIALS.regular.light, t = spec.tone, wgt = dark ? 0.9 : 0.8;
+      return table(function (v) { return wgt * (t[0] + t[1] * v + t[2] * v * v) + (1 - wgt) * v; });
     }
-    win.addEventListener('pointermove', function (e) {
-      tx = e.clientX / (win.innerWidth || 1); ty = e.clientY / (win.innerHeight || 1);
-      if (!queued) { queued = true; win.requestAnimationFrame(apply); }
-    }, { passive: true });
-    win.addEventListener('deviceorientation', function (e) {
-      if (e.gamma == null) return;
-      tx = clamp(0.5 + e.gamma / 60, 0, 1); ty = clamp(0.5 + (e.beta - 45) / 90, 0, 1);
-      if (!queued) { queued = true; win.requestAnimationFrame(apply); }
-    }, { passive: true });
+    var c = dark ? MATERIALS.clear.dark : MATERIALS.clear.light;
+    return table(function (v) {
+      var tone = v + c.shadowLift * Math.pow(1 - v, 3) - c.highlightRolloff * Math.pow(v, 3);
+      var tinted = dark ? 0.38 * v + 0.2 : 0.78 * v + 0.26, tw = dark ? 0.14 : 0.06;
+      return clamp((1 - tw) * tone + tw * tinted, 0, 1);
+    });
+  }
+
+  /**
+   * The material graph for one lens, as filter primitives.
+   *   P(role) returns the extra attributes of a primitive: its subregion
+   *   (and, in scene mode, a marker the scene uses to move it).
+   *   u = { blur(sigma) → stdDeviation string, scale(px) → scale string }
+   * Reads `src`, writes `${p}color`.
+   */
+  function materialGraph(p, src, mapHref, scale, o, dark, P, u, axis) {
+    var s = '', input = src;
+    if (o.variant === 'regular') {
+      var spec = dark ? MATERIALS.regular.dark : MATERIALS.regular.light;
+      s += '<feGaussianBlur in="' + src + '" stdDeviation="' + u.blur(MATERIALS.regular.blur) + '" data-sigma="' + MATERIALS.regular.blur + '" result="' + p + 'frost"' + P('pad') + '/>' +
+        '<feGaussianBlur in="' + src + '" stdDeviation="' + u.blur(spec.fillSigma) + '" data-sigma="' + spec.fillSigma + '" result="' + p + 'fill"' + P('pad') + '/>' +
+        '<feBlend in="' + p + 'frost" in2="' + p + 'fill" mode="' + (dark ? 'darken' : 'lighten') + '" result="' + p + 'blend"' + P('pad') + '/>' +
+        '<feComposite in="' + p + 'blend" in2="' + p + 'frost" operator="arithmetic" k1="0" k2="' + spec.fillOpacity + '" k3="' + round(1 - spec.fillOpacity, 4) + '" k4="0" result="' + p + 'mix"' + P('pad') + '/>';
+      input = p + 'mix';
+    }
+    s += img(mapHref, p + (axis ? 'map0' : 'map'), P('map'));
+    if (axis) s += '<feColorMatrix in="' + p + 'map0" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0" data-axis="1" result="' + p + 'map"' + P('map') + '/>';
+    var DM = function (k, out) {
+      return '<feDisplacementMap in="' + input + '" in2="' + p + 'map" scale="' + u.scale(scale * k) + '" data-scale="' + round(scale * k, 3) + '" xChannelSelector="R" yChannelSelector="G" result="' + out + '"' + P('map') + '/>';
+    };
+    if (!o.dispersion) s += DM(1, p + 'refracted');
+    else {
+      var D = o.dispersion, ch = ['1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0', '0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0', '0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0'];
+      s += DM(1 + D, p + 'dr') + '<feColorMatrix in="' + p + 'dr" type="matrix" values="' + ch[0] + '" result="' + p + 'cr"' + P('map') + '/>' +
+        DM(1, p + 'dg') + '<feColorMatrix in="' + p + 'dg" type="matrix" values="' + ch[1] + '" result="' + p + 'cg"' + P('map') + '/>' +
+        DM(1 - D, p + 'db') + '<feColorMatrix in="' + p + 'db" type="matrix" values="' + ch[2] + '" result="' + p + 'cb"' + P('map') + '/>' +
+        '<feBlend in="' + p + 'cr" in2="' + p + 'cg" mode="screen" result="' + p + 'rg"' + P('map') + '/>' +
+        '<feBlend in="' + p + 'rg" in2="' + p + 'cb" mode="screen" result="' + p + 'refracted"' + P('map') + '/>';
+    }
+    var tv = toneTable(o, dark);
+    if (o.variant === 'regular') {
+      var chroma = (dark ? MATERIALS.regular.dark : MATERIALS.regular.light).tone[3];
+      s += '<feComponentTransfer in="' + p + 'refracted" result="' + p + 'tone"' + P('map') + '>' +
+        '<feFuncR type="table" tableValues="' + tv + '"/><feFuncG type="table" tableValues="' + tv + '"/><feFuncB type="table" tableValues="' + tv + '"/></feComponentTransfer>' +
+        '<feColorMatrix in="' + p + 'tone" type="saturate" values="' + chroma + '" result="' + p + 'color"' + P('map') + '/>';
+    } else {
+      s += '<feComponentTransfer in="' + p + 'refracted" result="' + p + 'color"' + P('map') + '>' +
+        '<feFuncR type="table" tableValues="' + tv + '"/><feFuncG type="table" tableValues="' + tv + '"/><feFuncB type="table" tableValues="' + tv + '"/></feComponentTransfer>';
+    }
+    var tint = tintChannels(o.tint);
+    if (tint) {
+      // colored glass transmits luminance instead of mixing in neutral RGB
+      var body = o.variant === 'regular' ? 0.78 : 0.68;
+      s += '<feColorMatrix in="' + p + 'color" type="saturate" values="0" result="' + p + 'lum"' + P('map') + '/>' +
+        '<feComponentTransfer in="' + p + 'lum" result="' + p + 'tinted"' + P('map') + '>' +
+        ['R', 'G', 'B'].map(function (c, i) { return '<feFunc' + c + ' type="linear" slope="' + round(tint[i] * (1 - body), 4) + '" intercept="' + round(tint[i] * body, 4) + '"/>'; }).join('') +
+        '<feFuncA type="linear" slope="' + round(1 - body, 4) + '" intercept="' + body + '"/></feComponentTransfer>';
+      return { markup: s, out: p + 'tinted' };
+    }
+    return { markup: s, out: p + 'color' };
   }
 
   /* ------------------------------------------------------------------ *
-   * Scene — cross-browser refraction (Safari, Firefox, and anywhere you
-   * force it). The backdrop layer gets one SVG `filter` that refracts the
-   * region under every glass element in the scene, like a real lens array.
+   * Scene — cross-browser refraction (Safari, Firefox, or forced). One SVG
+   * filter on the `.lg-backdrop` renders every lens of the scene.
+   *
+   * All coordinates are fractions of the backdrop box
+   * (primitiveUnits="objectBoundingBox"): WebKit resolves userSpaceOnUse for
+   * CSS filters on HTML against the page, not the element, so fractions are
+   * the only units every engine agrees on. In those units displacement scales
+   * X by the box width and Y by its height, so each map goes through a colour
+   * matrix that rebalances the axes.
    * ------------------------------------------------------------------ */
 
   var scenes = new Map();
@@ -423,34 +458,20 @@
       scenes.delete(this.el);
     } else this.wake();
   };
-  // All scene coordinates are fractions of the backdrop's box
-  // (primitiveUnits="objectBoundingBox"): WebKit resolves userSpaceOnUse for
-  // CSS filters on HTML against the page, not the element, so fractions are
-  // the only units every engine agrees on. In those units feDisplacementMap
-  // scales X by the box width and Y by its height, so each map goes through a
-  // colour matrix that rebalances the two axes.
   Scene.prototype.rebuild = function () {
     this.dirty = false;
     var html = '', i = 0, self = this;
     this.items = [];
+    var u = { blur: function () { return '0'; }, scale: function () { return '0'; } };
     this.lenses.forEach(function (g) {
-      if (!g.map) return;
-      var o = g.opts, n = 'l' + (i++), b = Math.max(0, o.blur);
-      var Z = ' data-r="' + n + '"';
-      var sat = o.saturation, sl = o.contrast * o.brightness, ic = (0.5 - 0.5 * o.contrast) * o.brightness;
-      html +=
-        (b > 0.05 ? '<feGaussianBlur in="SourceGraphic" stdDeviation="0" data-blur="' + b + '" result="' + n + 'b" data-pad="1"' + Z + '/>'
-          : '<feOffset in="SourceGraphic" dx="0" dy="0" result="' + n + 'b" data-pad="1"' + Z + '/>') +
-        img(g.map.disp, n + 'm0', Z) +
-        '<feColorMatrix in="' + n + 'm0" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0" data-axis="1" result="' + n + 'm"' + Z + '/>' +
-        displace(n + 'b', n + 'm', g.map.scale, o.dispersion, n + 'd', Z, ' data-s="' + g.map.scale + '"') +
-        '<feColorMatrix in="' + n + 'd" type="saturate" values="' + sat + '" result="' + n + 'c"' + Z + '/>' +
-        '<feComponentTransfer in="' + n + 'c" result="' + n + 't"' + Z + '>' +
-        '<feFuncR type="linear" slope="' + sl + '" intercept="' + ic + '"/>' +
-        '<feFuncG type="linear" slope="' + sl + '" intercept="' + ic + '"/>' +
-        '<feFuncB type="linear" slope="' + sl + '" intercept="' + ic + '"/></feComponentTransfer>' +
-        img(g.map.mask, n + 'k', Z) +
-        '<feComposite in="' + n + 't" in2="' + n + 'k" operator="in" result="' + n + 'o"' + Z + '/>';
+      if (!g.maps) return;
+      var n = 'l' + (i++);
+      var P = function (role) { return ' data-r="' + n + '" data-k="' + role + '"'; };
+      var gph = materialGraph(n, 'SourceGraphic', g.maps.field, g.maps.scale, g.opts, g.dark, P, u, true);
+      html += gph.markup + img(g.maps.mask, n + 'k', P('map')) +
+        '<feComposite in="' + gph.out + '" in2="' + n + 'k" operator="in" result="' + n + 'i"' + P('map') + '/>' +
+        // the lens follows the element's opacity (fades, hidden popovers)
+        '<feComponentTransfer in="' + n + 'i" result="' + n + 'o"' + P('map') + '><feFuncA type="linear" slope="1" data-op="1"/></feComponentTransfer>';
       self.items.push({ g: g, n: n, last: '' });
     });
     html += '<feMerge><feMergeNode in="SourceGraphic"/>' + this.items.map(function (it) { return '<feMergeNode in="' + it.n + 'o" data-m="' + it.n + '"/>'; }).join('') + '</feMerge>';
@@ -463,6 +484,7 @@
     this.items.forEach(function (it) {
       it.nodes = Array.prototype.slice.call(self.filter.querySelectorAll('[data-r="' + it.n + '"]'));
       it.merge = self.filter.querySelector('[data-m="' + it.n + '"]');
+      it.op = self.filter.querySelector('[data-r="' + it.n + '"] [data-op]');
     });
     this.backdrop.style.filter = 'url(#' + this.filter.id + ')';
   };
@@ -473,37 +495,45 @@
     var kx = br.width ? bw / br.width : 1, ky = br.height ? bh / br.height : 1;
     var mn = Math.min(bw, bh), ax = mn / bw, ay = mn / bh;
     var axis = round(ax, 6) + ' 0 0 0 ' + round((1 - ax) / 2, 6) + ' 0 ' + round(ay, 6) + ' 0 0 ' + round((1 - ay) / 2, 6) + ' 0 0 1 0 0 0 0 0 1 0';
-    // read all, then write all (no layout thrash)
+    var sceneEl = this.el;
     var reads = this.items.map(function (it) {
       var g = it.g, r = g.el.getBoundingClientRect();
-      // A switched-off lens keeps valid geometry (WebKit drops the whole
-      // filter if a primitive leaves the region) and just leaves the merge.
-      var off = g.el.getAttribute('data-lg-lens') === 'off' || !r.width;
-      if (!r.width) r = { left: br.left, top: br.top, width: 1, height: 1 };
-      return { it: it, off: off, x: (r.left - br.left) * kx, y: (r.top - br.top) * ky, w: r.width * kx, h: r.height * ky, lw: g.el.offsetWidth || 1 };
+      var op = 1;
+      for (var a = g.el; a && a !== sceneEl; a = a.parentElement) {
+        var cs = win.getComputedStyle(a);
+        op *= +cs.opacity;
+        if (cs.visibility === 'hidden') op = 0;
+      }
+      var x = (r.left - br.left) * kx, y = (r.top - br.top) * ky, w = r.width * kx, h = r.height * ky;
+      // A lens that is switched off, invisible or outside the backdrop keeps
+      // valid geometry (WebKit drops the whole filter if a primitive leaves
+      // the region) and just leaves the merge.
+      var outside = x + w <= 0 || y + h <= 0 || x >= bw || y >= bh;
+      var off = g.el.getAttribute('data-lg-lens') === 'off' || !r.width || op < 0.01 || outside;
+      if (!r.width || outside) { x = 0; y = 0; w = Math.max(1, Math.min(w, bw)); h = Math.max(1, Math.min(h, bh)); }
+      return { it: it, off: off, op: op, x: x, y: y, w: w, h: h, lw: g.el.offsetWidth || 1 };
     });
     reads.forEach(function (m) {
       var it = m.it, o = it.g.opts;
-      var sig = [m.off ? 0 : 1, round(m.x, 1), round(m.y, 1), round(m.w, 1), round(m.h, 1), bw, bh].join(',');
+      var sig = [m.off ? 0 : 1, round(m.x, 1), round(m.y, 1), round(m.w, 1), round(m.h, 1), bw, bh, round(m.op, 3)].join(',');
       if (sig === it.last) return;
       it.last = sig;
       if (it.merge) it.merge.setAttribute('in', m.off ? 'SourceGraphic' : it.n + 'o');
+      if (it.op) it.op.setAttribute('slope', round(clamp(m.op, 0, 1), 3));
       if (m.off && it.placed) return;
       it.placed = true;
-      var k = m.lw ? m.w / m.lw : 1;
-      var pad = it.g.map.reach * k + o.blur * 3 + 2;
+      var k = m.lw ? m.w / m.lw : 1, M = MARGIN * k;
+      var pad = 3 * 23 + (it.g.refraction || 0) * k + 4;
       it.nodes.forEach(function (n) {
-        var p = n.hasAttribute('data-pad') ? pad : 0;
-        n.setAttribute('x', round((m.x - p) / bw, 6)); n.setAttribute('y', round((m.y - p) / bh, 6));
-        n.setAttribute('width', round(Math.max(0, m.w + 2 * p) / bw, 6)); n.setAttribute('height', round(Math.max(0, m.h + 2 * p) / bh, 6));
-        if (n.hasAttribute('data-s')) {
-          var base = parseFloat(n.getAttribute('data-s')), res = n.getAttribute('result');
-          var mul = /dr$/.test(res) ? 1 + o.dispersion : /db$/.test(res) ? 1 - o.dispersion : 1;
-          n.setAttribute('scale', round(base * k * mul / mn, 6));
-        }
+        var role = n.getAttribute('data-k');
+        var x = m.x - M, y = m.y - M, w = m.w + 2 * M, h = m.h + 2 * M;
+        if (role === 'pad') { x -= pad; y -= pad; w += 2 * pad; h += 2 * pad; }
+        n.setAttribute('x', round(x / bw, 6)); n.setAttribute('y', round(y / bh, 6));
+        n.setAttribute('width', round(Math.max(0, w) / bw, 6)); n.setAttribute('height', round(Math.max(0, h) / bh, 6));
+        if (n.hasAttribute('data-scale')) n.setAttribute('scale', round(parseFloat(n.getAttribute('data-scale')) * k / mn, 6));
         if (n.hasAttribute('data-axis')) n.setAttribute('values', axis);
-        if (n.hasAttribute('data-blur')) {
-          var b = parseFloat(n.getAttribute('data-blur'));
+        if (n.hasAttribute('data-sigma')) {
+          var b = parseFloat(n.getAttribute('data-sigma')) * k;
           n.setAttribute('stdDeviation', round(b / bw, 6) + ' ' + round(b / bh, 6));
         }
       });
@@ -515,11 +545,12 @@
    * ------------------------------------------------------------------ */
 
   var instances = new WeakMap();
+  var GROUP_SELECTOR = '.lg-glass-group, [data-glass-group]';
 
   function Glass(node, opts) {
     this.el = node; this.id = ++uid; this.userOpts = opts || {};
     this.opts = resolveOptions(node, this.userOpts);
-    this.filter = null; this.scene = null; this.map = null;
+    this.filter = null; this.scene = null; this.maps = null;
     instances.set(node, this);
 
     node.classList.add('lg-ready');
@@ -528,10 +559,9 @@
     var layers = el('span', 'lg-layers');
     layers.setAttribute('aria-hidden', 'true');
     this.refract = el('span', 'lg-refract', layers);
-    this.tint = el('span', 'lg-tint', layers);
-    this.shade = el('span', 'lg-shade', layers);
+    this.fill = el('span', 'lg-fill', layers);
     this.glow = el('span', 'lg-glow', layers);
-    this.rim = el('span', 'lg-rim', layers);
+    this.overlay = el('span', 'lg-overlay', layers);
     this.layers = layers;
     node.insertBefore(layers, node.firstChild);
 
@@ -539,13 +569,10 @@
     this.queued = false;
     this.ro = new ResizeObserver(function () { self.schedule(); });
     this.ro.observe(node);
-    if (this.opts.tint) node.style.setProperty('--lg-tint', this.opts.tint);
     if (this.opts.interactive) this.bindInteractive();
     this.render();
-    bindLight(defaults.light);
   }
 
-  var GROUP_SELECTOR = '.lg-glass-group, [data-glass-group]';
   Glass.prototype.decideMode = function () {
     var m = this.opts.mode;
     if (this.el.parentElement && this.el.parentElement.closest(GROUP_SELECTOR)) return 'member';
@@ -570,7 +597,6 @@
     assign(this.userOpts, opts);
     var wasInteractive = this.opts.interactive;
     this.opts = resolveOptions(this.el, this.userOpts);
-    if (this.opts.tint) this.el.style.setProperty('--lg-tint', this.opts.tint); else this.el.style.removeProperty('--lg-tint');
     if (this.opts.interactive && !wasInteractive) this.bindInteractive();
     this.lastSig = '';
     this.render();
@@ -583,38 +609,38 @@
     var w = node.offsetWidth, h = node.offsetHeight;
     if (!w || !h) return;
     var o = this.opts, r = radiusOf(node, w, h);
-    var mode = this.decideMode();
-    var sig = [mode, w, h, r, o.refraction, o.bezel, o.curvature, o.magnify, o.dispersion, o.blur, o.saturation, o.brightness, o.contrast].join('|');
+    var mode = this.decideMode(), dark = appearanceOf(node) === 'dark';
+    var sig = [mode, w, h, r, dark, o.variant, o.refraction, o.bezel, o.magnify, o.dispersion, o.tint].join('|');
     if (sig === this.lastSig) return;
     this.lastSig = sig;
-    this.mode = mode;
+    this.mode = mode; this.dark = dark;
     node.setAttribute('data-lg-mode', mode);
     node.setAttribute('data-lg-variant', o.variant);
+    node.setAttribute('data-lg-appearance', dark ? 'dark' : 'light');
     node.toggleAttribute('data-lg-tinted', !!o.tint);
+    if (o.tint) node.style.setProperty('--lg-tint', o.tint); else node.style.removeProperty('--lg-tint');
     node.style.setProperty('--lg-r', round(r) + 'px');
-    if (mode === 'member') {
-      if (this.filter) { this.filter.remove(); this.filter = null; }
-      if (this.scene) { this.scene.remove(this); this.scene = null; }
-      this.refract.style.backdropFilter = this.refract.style.webkitBackdropFilter = '';
-      var grp = groups.get(node.parentElement.closest(GROUP_SELECTOR));
-      if (grp) grp.wake();
-      return;
-    }
 
     var rs = this.refract.style;
     if (mode !== 'scene' && this.scene) { this.scene.remove(this); this.scene = null; }
     if (mode !== 'backdrop' && this.filter) { this.filter.remove(); this.filter = null; }
 
-    if (mode === 'fallback') {
-      var fb = 'blur(' + Math.max(o.blur * 3, 10) + 'px) saturate(' + o.saturation + ') brightness(' + o.brightness + ')';
-      rs.backdropFilter = rs.webkitBackdropFilter = fb;
+    if (mode === 'member') {
+      rs.backdropFilter = rs.webkitBackdropFilter = '';
+      this.overlay.style.backgroundImage = '';
+      wakeGroupOf(node);
       return;
     }
 
-    var oo = optics(o, w, h);
-    oo.hiRes = mode === 'scene' && !isChromium;
-    this.map = makeMap(w, h, r, oo);
-    this.shade.style.backgroundImage = 'url("' + this.map.shade + '")';
+    this.refraction = autoRefraction(o, w, h);
+    this.maps = makeMaps(w, h, r, { refraction: this.refraction, bezel: o.bezel, magnify: o.magnify, dark: dark });
+    this.overlay.style.backgroundImage = 'url("' + this.maps.overlay + '")';
+
+    if (mode === 'fallback') {
+      var fb = o.variant === 'regular' ? 'blur(18px) saturate(1.4)' : 'blur(1px) saturate(1.1)';
+      rs.backdropFilter = rs.webkitBackdropFilter = fb;
+      return;
+    }
 
     if (mode === 'scene') {
       rs.backdropFilter = rs.webkitBackdropFilter = '';
@@ -625,21 +651,21 @@
       return;
     }
 
-    // backdrop mode (Chromium). The refract layer is exactly the element's
-    // shape (its own border-radius is the one clip Chromium always honours
-    // for backdrop-filter), while the SVG filter region reaches M px beyond
-    // it — so the rim can bend in real pixels from outside the edge.
-    var M = Math.ceil(this.map.reach + 2);
+    // backdrop mode (Chromium): the whole material graph runs as the
+    // backdrop-filter. The refract layer keeps the element's own
+    // border-radius — the one clip Chromium always honours for backdrops.
     var fid = 'lg-glass-' + this.id + '-' + (++uid);
-    var R = rect(0, 0, w, h);
-    var inner = img(this.map.disp, 'map', R) + displace('SourceGraphic', 'map', this.map.scale, o.dispersion, 'refr', R);
+    var P = function (role) { return role === 'map' ? rect(-MARGIN, -MARGIN, w + 2 * MARGIN, h + 2 * MARGIN) : ''; };
+    var u = { blur: function (v) { return v; }, scale: function (v) { return round(v, 3); } };
+    var gph = materialGraph('m', 'SourceGraphic', this.maps.field, this.maps.scale, o, dark, P, u, false);
+    var pad = 80 + this.refraction;
     var old = this.filter;
     this.filter = makeFilter(fid, {
-      x: -M, y: -M, width: w + 2 * M, height: h + 2 * M,
+      x: -pad, y: -pad, width: w + 2 * pad, height: h + 2 * pad,
       filterUnits: 'userSpaceOnUse', primitiveUnits: 'userSpaceOnUse',
       'color-interpolation-filters': 'sRGB'
-    }, inner);
-    var bf = (o.blur > 0.05 ? 'blur(' + o.blur + 'px) ' : '') + 'url(#' + fid + ') saturate(' + o.saturation + ') brightness(' + o.brightness + ') contrast(' + o.contrast + ')';
+    }, gph.markup);
+    var bf = 'url(#' + fid + ')';
     rs.backdropFilter = bf;
     rs.webkitBackdropFilter = bf;
     if (old) win.requestAnimationFrame(function () { old.remove(); });
@@ -716,6 +742,7 @@
     if (this.layers.parentNode) this.layers.parentNode.removeChild(this.layers);
     if (this._down) {
       this.el.removeEventListener('pointerdown', this._down);
+      this.el.removeEventListener('pointermove', this._hover);
       win.removeEventListener('pointermove', this._move);
       win.removeEventListener('pointerup', this._up);
       win.removeEventListener('pointercancel', this._up);
@@ -744,9 +771,8 @@
     ind.setAttribute('aria-hidden', 'true');
     list.appendChild(ind);
     apply(ind, {
-      variant: 'clear', refraction: nav.dataset.lensRefraction ? +nav.dataset.lensRefraction : null,
-      bezel: nav.dataset.lensBezel ? +nav.dataset.lensBezel : null,
-      magnify: +(nav.dataset.lensMagnify || 1.16), dispersion: +(nav.dataset.lensDispersion || 0.1), blur: 0
+      variant: 'clear', refraction: nav.dataset.lensRefraction ? +nav.dataset.lensRefraction : 6,
+      magnify: +(nav.dataset.lensMagnify || 1.12), dispersion: +(nav.dataset.lensDispersion || 0)
     });
     var FAST = [640, 40], SLOW = [210, 24];
     var a = new Spring(0, { stiffness: FAST[0], damping: FAST[1] });
@@ -861,7 +887,7 @@
     var knob = el('span', 'lg-switch-knob');
     knob.setAttribute('aria-hidden', 'true');
     label.appendChild(track); label.appendChild(knob);
-    apply(knob, { variant: 'clear', refraction: 8, bezel: 8, magnify: 1.25, dispersion: 0.2, blur: 0 });
+    apply(knob, { variant: 'clear', refraction: 3, magnify: 1.15 });
     var pos = new Spring(input.checked ? 1 : 0, { stiffness: 480, damping: 34 });
     var act = new Spring(0, { stiffness: 380, damping: 24 });
     var drag = null;
@@ -923,7 +949,7 @@
     var knob = el('span', 'lg-slider-knob');
     knob.setAttribute('aria-hidden', 'true');
     wrap.insertBefore(track, input); wrap.insertBefore(knob, input);
-    apply(knob, { variant: 'clear', refraction: 6, bezel: 7, magnify: 1.18, dispersion: 0.15, blur: 0 });
+    apply(knob, { variant: 'clear', refraction: 3, magnify: 1.15 });
     function frac() { var a = +input.min || 0, b = +input.max || 100; return (input.value - a) / ((b - a) || 1); }
     var pos = new Spring(frac(), { stiffness: 900, damping: 50 });
     var act = new Spring(0, { stiffness: 360, damping: 24 });
@@ -1044,6 +1070,9 @@
     function put(l, t) { node.style.left = round(l, 1) + 'px'; node.style.top = round(t, 1) + 'px'; node.style.right = 'auto'; node.style.bottom = 'auto'; wakeGroupOf(node); }
     node.addEventListener('pointerdown', function (e) {
       if (e.button > 0) return;
+      // controls inside a draggable surface keep their own clicks
+      var ctl = e.target.closest && e.target.closest('button, a, input, select, textarea, label, [role="slider"], [role="tab"]');
+      if (ctl && ctl !== node && node.contains(ctl)) return;
       e.preventDefault();
       try { node.setPointerCapture(e.pointerId); } catch (_) {}
       drag = { x: e.clientX, y: e.clientY, l: node.offsetLeft, t: node.offsetTop, k: node.offsetWidth / node.getBoundingClientRect().width || 1 };
@@ -1094,12 +1123,13 @@
     });
   }
 
+
   /* ------------------------------------------------------------------ *
    * Glass group — Apple's GlassEffectContainer. Every glass element inside
    * is rendered as ONE liquid surface: shapes are combined with a smooth
    * union of signed distance fields, so neighbours melt together with a
    * neck as they approach and pinch apart as they separate (the "morph").
-   * The union field is re-solved only while something moves.
+   * The union is re-solved only while something moves.
    * ------------------------------------------------------------------ */
 
   var groups = new Map();
@@ -1124,23 +1154,21 @@
     if (win.getComputedStyle(node).position === 'static') node.style.position = 'relative';
     var L = this.layer = el('span', 'lg-group-layer');
     L.setAttribute('aria-hidden', 'true');
-    this.shadowWrap = el('span', 'lg-g-shadow', L);
-    this.tint = el('span', 'lg-g-tint', this.shadowWrap);
     this.refract = el('span', 'lg-g-refract', L);
-    this.shade = el('span', 'lg-g-shade', L);
+    this.fill = el('span', 'lg-g-fill', L);
+    this.overlay = el('span', 'lg-g-overlay', L);
     node.insertBefore(L, node.firstChild);
     this.sig = '';
     var self = this;
     this.tick = function () { return self.update(); };
     this.idle = 0;
+    this.visible = true;
     if ('IntersectionObserver' in win) {
       new IntersectionObserver(function (es) { self.visible = es[es.length - 1].isIntersecting; if (self.visible) self.wake(); }, { rootMargin: '100px' }).observe(node);
     }
-    this.visible = true;
     this.ro = new ResizeObserver(function () { self.wake(); });
     this.ro.observe(node);
     this.wake();
-    bindLight(defaults.light);
   }
   Group.prototype.wake = function () { this.idle = 0; animate(this.tick); };
   Group.prototype.members = function () {
@@ -1160,16 +1188,18 @@
       return { x: (r.left - gr.left) * k, y: (r.top - gr.top) * k, w: r.width * k, h: r.height * k,
                r: radiusOf(m, m.offsetWidth, m.offsetHeight) * sc };
     });
-    var sig = shapes.map(function (s) { return [round(s.x, 1), round(s.y, 1), round(s.w, 1), round(s.h, 1), round(s.r, 1)].join(','); }).join(';') + '|' + this.el.getAttribute('data-glass-appearance');
-    if (sig !== this.sig) { this.sig = sig; this.idle = 0; this.draw(shapes); }
+    var dark = appearanceOf(this.el) === 'dark';
+    var sig = shapes.map(function (s) { return [round(s.x, 1), round(s.y, 1), round(s.w, 1), round(s.h, 1), round(s.r, 1)].join(','); }).join(';') + '|' + dark;
+    if (sig !== this.sig) { this.sig = sig; this.idle = 0; this.draw(shapes, dark); }
     else this.idle++;
     // keep polling briefly after the last change (springs/CSS transitions), then sleep
     return this.visible && this.idle < 45;
   };
-  Group.prototype.draw = function (shapes) {
+  Group.prototype.draw = function (shapes, dark) {
     var L = this.layer, o = this.opts;
     if (!shapes.length) { L.style.display = 'none'; return; }
     L.style.display = '';
+    this.el.toggleAttribute('data-lg-dark', dark);
     var P = Math.ceil(this.merge + 4);
     var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, minDim = Infinity;
     shapes.forEach(function (s) {
@@ -1181,21 +1211,20 @@
     L.style.left = round(x0) + 'px'; L.style.top = round(y0) + 'px';
     L.style.width = w + 'px'; L.style.height = h + 'px';
 
-    var opt = optics(o, minDim, minDim);
-    var bez = opt.bezel, R = opt.refraction, lut = profileLUT(o.curvature);
-    var s = clamp(Math.sqrt(160000 / (w * h)), 0.5, 1);
+    var R = autoRefraction(o, minDim, minDim);
+    var s = clamp(Math.sqrt(180000 / (w * h)), 0.5, 1.5);
     var W = Math.max(2, Math.round(w * s)), H = Math.max(2, Math.round(h * s));
-    var sx = W / w, sy = H / h, K = Math.max(1, this.merge * 2); // bridges form once the gap < merge
+    var K = Math.max(1, this.merge * 2); // bridges form once the gap < merge
     var n = shapes.length, sh = shapes.map(function (q) {
       var r = Math.min(q.r, q.w / 2, q.h / 2);
       return { cx: q.x - x0 + q.w / 2, cy: q.y - y0 + q.h / 2, hw: q.w / 2, hh: q.h / 2, r: r };
     });
-    // 1) union signed distance field (polynomial smooth-min)
+    // union signed distance field (polynomial smooth-min)
     var SD = new Float32Array(W * H);
     for (var j = 0; j < H; j++) {
-      var py = (j + 0.5) / sy;
+      var py = (j + 0.5) / s;
       for (var i = 0; i < W; i++) {
-        var px = (i + 0.5) / sx, d = 1e9;
+        var px = (i + 0.5) / s, d = 1e9;
         for (var m = 0; m < n; m++) {
           var q = sh[m], dm = sdRoundBox(px - q.cx, py - q.cy, q.hw, q.hh, q.r);
           var hk = Math.max(K - Math.abs(d - dm), 0) / K;
@@ -1204,72 +1233,34 @@
         SD[j * W + i] = d;
       }
     }
-    // 2) displacement, mask and lighting from the field and its gradient
-    var mk = function () { var c = doc.createElement('canvas'); c.width = W; c.height = H; return c; };
-    var cd = mk(), cm = mk(), cs = mk();
-    var xd = cd.getContext('2d'), xm = cm.getContext('2d'), xs = cs.getContext('2d');
-    var id = xd.createImageData(W, H), im = xm.createImageData(W, H), is = xs.createImageData(W, H);
-    var D = id.data, M = im.data, S = is.data;
-    var kk = 127.5 / Math.max(1, R), aa = Math.min(sx, sy);
-    var ang = (parseFloat(win.getComputedStyle(doc.documentElement).getPropertyValue('--lg-light-angle')) || -45) * Math.PI / 180;
-    var lx = Math.sin(ang), ly = -Math.cos(ang); // light direction in screen space
-    var dark = this.el.closest('[data-glass-appearance="dark"]') ? 0.6 : 1;
-    for (var y = 0; y < H; y++) {
-      for (var x = 0; x < W; x++) {
-        var ix = y * W + x, v = SD[ix];
-        var gx = (SD[y * W + Math.min(W - 1, x + 1)] - SD[y * W + Math.max(0, x - 1)]) * sx;
-        var gy = (SD[Math.min(H - 1, y + 1) * W + x] - SD[Math.max(0, y - 1) * W + x]) * sy;
-        var gl = Math.sqrt(gx * gx + gy * gy) || 1, nx = gx / gl, ny = gy / gl;
-        var t = clamp(-v / bez, 0, 1);
-        var fi = t * 255, i0 = fi | 0, f = lut[i0] + (lut[Math.min(255, i0 + 1)] - lut[i0]) * (fi - i0);
-        var sad = clamp((gl - 0.08) / 0.4, 0, 1); // fade out at saddle points (gradient → 0)
-        var mag = f * R * sad * sad * (3 - 2 * sad), p4 = ix * 4;
-        D[p4] = clamp(Math.round(127.5 - nx * mag * kk), 0, 255);
-        D[p4 + 1] = clamp(Math.round(127.5 - ny * mag * kk), 0, 255);
-        D[p4 + 2] = 128; D[p4 + 3] = 255;
-        var cov = clamp(0.5 - v * aa, 0, 1);
-        M[p4] = M[p4 + 1] = M[p4 + 2] = 255; M[p4 + 3] = Math.round(cov * 255);
-        if (cov > 0) {
-          // specular rim: two lobes facing the light and its reflection
-          var facing = nx * lx + ny * ly;
-          var rimW = clamp(1 - Math.abs(v + 0.8) / 1.4, 0, 1);
-          var lobe = Math.pow(Math.abs(facing), 3);
-          var bevel = (1 - t) * (1 - t) * Math.max(0, -facing) * 0.18;
-          var a = (rimW * (0.18 + 0.82 * lobe) * (facing < 0 ? 1 : 0.7) + bevel) * cov * dark;
-          S[p4] = S[p4 + 1] = S[p4 + 2] = 255; S[p4 + 3] = Math.round(clamp(a, 0, 1) * 255);
-        }
-      }
-    }
-    xd.putImageData(id, 0, 0); xm.putImageData(im, 0, 0); xs.putImageData(is, 0, 0);
-    var disp = cd.toDataURL('image/png'), mask = 'url("' + cm.toDataURL('image/png') + '")';
-    [this.refract, this.tint].forEach(function (e) {
-      e.style.webkitMaskImage = e.style.maskImage = mask;
-    });
-    this.shade.style.backgroundImage = 'url("' + cs.toDataURL('image/png') + '")';
-    this.el.style.setProperty('--lg-g-blur', o.blur + 'px');
+    var sample = function (x, y) {
+      var i = clamp(Math.floor(x * s), 0, W - 1), j = clamp(Math.floor(y * s), 0, H - 1), ix = j * W + i;
+      var gx = (SD[j * W + Math.min(W - 1, i + 1)] - SD[j * W + Math.max(0, i - 1)]) * s;
+      var gy = (SD[Math.min(H - 1, j + 1) * W + i] - SD[Math.max(0, j - 1) * W + i]) * s;
+      var gl = Math.sqrt(gx * gx + gy * gy) || 1;
+      var sad = clamp((gl - 0.08) / 0.4, 0, 1); // fade the bend out at saddle points
+      return [SD[ix], gx / gl, gy / gl, sad * sad * (3 - 2 * sad)];
+    };
+    var maps = renderMaps(W, H, s, sample, { refraction: R, bezel: o.bezel, magnify: 1, dark: dark });
+    var mask = 'url("' + maps.mask + '")';
+    [this.refract, this.fill].forEach(function (e) { e.style.webkitMaskImage = e.style.maskImage = mask; });
+    this.overlay.style.backgroundImage = 'url("' + maps.overlay + '")';
 
-    // refraction (Chromium); elsewhere the masked layer is a frosted fallback
     var rs = this.refract.style;
     if (supports.backdropRefraction && !mqReduceTransparency.matches && !mqMoreContrast.matches) {
-      if (!this.filter) {
-        this.filter = makeFilter('lg-group-' + this.id, {
-          x: 0, y: 0, width: w, height: h, filterUnits: 'userSpaceOnUse', primitiveUnits: 'userSpaceOnUse',
-          'color-interpolation-filters': 'sRGB'
-        }, '<feImage preserveAspectRatio="none" result="map" x="0" y="0"/>' +
-           '<feDisplacementMap in="SourceGraphic" in2="map" xChannelSelector="R" yChannelSelector="G"/>');
-        this.fImg = this.filter.querySelector('feImage');
-        this.fDm = this.filter.querySelector('feDisplacementMap');
-      }
-      this.filter.setAttribute('width', w); this.filter.setAttribute('height', h);
-      this.fImg.setAttribute('width', w); this.fImg.setAttribute('height', h);
-      this.fImg.setAttribute('href', disp);
-      this.fDm.setAttribute('scale', round(2 * R));
-      var bf = (o.blur > 0.05 ? 'blur(' + o.blur + 'px) ' : '') + 'url(#' + this.filter.id + ') saturate(' + o.saturation + ') brightness(' + o.brightness + ') contrast(' + o.contrast + ')';
-      if (rs.backdropFilter !== bf) { rs.backdropFilter = bf; rs.webkitBackdropFilter = bf; }
-      else { rs.backdropFilter = ''; void this.refract.offsetWidth; rs.backdropFilter = bf; }
+      var Pm = function (role) { return role === 'map' ? rect(0, 0, w, h) : ''; };
+      var u = { blur: function (v) { return v; }, scale: function (v) { return round(v, 3); } };
+      var gph = materialGraph('g', 'SourceGraphic', maps.field, maps.scale, o, dark, Pm, u, false);
+      var pad = 80 + R, old = this.filter;
+      this.filter = makeFilter('lg-group-' + this.id + '-' + (++uid), {
+        x: -pad, y: -pad, width: w + 2 * pad, height: h + 2 * pad, filterUnits: 'userSpaceOnUse', primitiveUnits: 'userSpaceOnUse',
+        'color-interpolation-filters': 'sRGB'
+      }, gph.markup);
+      rs.backdropFilter = rs.webkitBackdropFilter = 'url(#' + this.filter.id + ')';
+      if (old) old.remove();
     } else {
-      var fb = 'blur(' + Math.max(o.blur * 2, 10) + 'px) saturate(' + o.saturation + ')';
-      rs.backdropFilter = rs.webkitBackdropFilter = fb;
+      rs.backdropFilter = rs.webkitBackdropFilter = o.variant === 'regular' ? 'blur(18px) saturate(1.4)' : 'blur(1px)';
+      this.el.setAttribute('data-lg-frosted', '');
     }
   };
 
@@ -1311,6 +1302,11 @@
     if (rootNode.matches && rootNode.matches(GLASS_SELECTOR)) apply(rootNode);
     Array.prototype.forEach.call(rootNode.querySelectorAll ? rootNode.querySelectorAll(GLASS_SELECTOR) : [], function (n) { apply(n); });
   }
+  function rerenderAll() {
+    mapCache.clear();
+    doc.querySelectorAll('.lg-ready').forEach(function (n) { var g = instances.get(n); if (g) { g.lastSig = ''; g.render(); } });
+    groups.forEach(function (g) { g.sig = ''; g.wake(); });
+  }
 
   var observer = null, initialized = false;
   function init(opts) {
@@ -1320,18 +1316,26 @@
     doc.documentElement.classList.add('lg-js', supports.backdropRefraction ? 'lg-refraction-backdrop' : 'lg-refraction-scene');
     scan(doc);
     observer = new MutationObserver(function (muts) {
+      var appearance = false;
       muts.forEach(function (m) {
+        if (m.type === 'attributes') { appearance = true; return; }
         Array.prototype.forEach.call(m.addedNodes, function (n) { if (n.nodeType === 1 && !n.classList.contains('lg-layers')) scan(n); });
         Array.prototype.forEach.call(m.removedNodes, function (n) {
-          if (n.nodeType !== 1 || n.classList.contains('lg-layers')) return;
+          if (n.nodeType !== 1) return;
+          if (n.classList.contains('lg-layers')) {
+            // innerHTML / textContent wiped the glass layers: put them back
+            var g = instances.get(m.target);
+            if (g && g.layers === n && m.target.isConnected && !n.parentNode) m.target.insertBefore(n, m.target.firstChild);
+            return;
+          }
           if (instances.has(n) && !n.isConnected) destroy(n);
           if (n.querySelectorAll) Array.prototype.forEach.call(n.querySelectorAll('.lg-ready'), function (c) { if (!c.isConnected) destroy(c); });
         });
       });
+      if (appearance) rerenderAll();
     });
-    observer.observe(doc.documentElement, { childList: true, subtree: true });
-    function rerender() { mapCache.clear(); doc.querySelectorAll('.lg-ready').forEach(function (n) { var g = instances.get(n); if (g) { g.lastSig = ''; g.render(); } }); }
-    [mqReduceTransparency, mqMoreContrast].forEach(function (q) { if (q.addEventListener) q.addEventListener('change', rerender); });
+    observer.observe(doc.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-glass-appearance'] });
+    [mqReduceTransparency, mqMoreContrast, mqDark].forEach(function (q) { if (q.addEventListener) q.addEventListener('change', rerenderAll); });
     return api;
   }
 
@@ -1339,7 +1343,7 @@
     version: VERSION,
     supports: supports,
     defaults: defaults,
-    variants: VARIANTS,
+    materials: MATERIALS,
     init: init,
     apply: apply,
     get: function (node) { return instances.get(node) || null; },
@@ -1347,10 +1351,12 @@
     refresh: function (node) {
       if (node) { var g = instances.get(node); if (g) { g.lastSig = ''; g.render(); } return; }
       scan(doc);
-      doc.querySelectorAll('.lg-ready').forEach(function (n) { var g = instances.get(n); if (g) { g.lastSig = ''; g.render(); } });
+      rerenderAll();
     },
-    profile: function (curvature) { return Array.prototype.slice.call(profileLUT(curvature || 4)); },
-    displacementMap: function (w, h, r, opts) { return makeMap(w, h, r, optics(resolveOptions(doc.createElement('div'), opts), w, h)); },
+    maps: function (w, h, r, opts) {
+      var o = resolveOptions(doc.createElement('div'), opts);
+      return makeMaps(w, h, r, { refraction: autoRefraction(o, w, h), bezel: o.bezel, magnify: o.magnify, dark: !!(opts && opts.dark) });
+    },
     Spring: Spring,
     animate: animate,
     group: group,

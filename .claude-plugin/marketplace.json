@@ -7,7 +7,7 @@
       "name": "liquid-glass",
       "source": "./",
       "description": "Liquid Glass da Apple em HTML, CSS e JS puros: refração, morph líquido, luz especular, molas e componentes guiados pelo HIG.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "category": "design"
     }
   ]

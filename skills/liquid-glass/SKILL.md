@@ -5,7 +5,7 @@ description: Build Apple's Liquid Glass material (iOS 26 / macOS Tahoe style) on
 
 # Liquid Glass for the web
 
-A dependency-free library (`liquid-glass.js` + `liquid-glass.css`, ~16 KB min+gzip) that recreates Apple's Liquid Glass. Any element with `class="glass"` becomes a refracting, lit, optionally interactive glass surface. Ship the two files from `assets/` with the page and write semantic HTML — no framework, no bundler.
+A dependency-free library (`liquid-glass.js` + `liquid-glass.css`, ~16 KB min+gzip) that recreates Apple's Liquid Glass. Its material model (frost/fill backdrop, tone curves, circular rim profile, rim lighting) is a vanilla-JS port of [Glass-HQ/liquid-glass](https://github.com/Glass-HQ/liquid-glass) (MIT). Any element with `class="glass"` becomes a refracting, lit, optionally interactive glass surface. Ship the two files from `assets/` with the page and write semantic HTML — no framework, no bundler.
 
 ## Quick start
 
@@ -64,11 +64,10 @@ Rules: glass elements live inside the scene but **outside** `.lg-backdrop`; what
 | Attribute | Default | Meaning |
 |---|---|---|
 | `data-glass="clear"` | regular | Variant |
-| `data-glass-bezel` | auto (30% of the short side, 6–90) | Width of the curved rim, px |
-| `data-glass-refraction` | auto (0.75 × bezel) | Max bend at the rim, px — keep ≤ bezel or the rim folds |
+| `data-glass-refraction` | auto (≈20% of the short side, up to 60) | How far (px) the rim pulls the backdrop inward |
+| `data-glass-bezel` | 20 | Depth of the curved rim, px |
 | `data-glass-magnify` | 1 | Lens zoom of the flat center (1.2–1.5 for lenses/knobs) |
 | `data-glass-dispersion` | 0 | Chromatic aberration (0.05–0.25 over photos/headlines; 0 over body text) |
-| `data-glass-blur` | 7 (regular) / 0.5 (clear) | Frost, px |
 | `data-glass-tint` | — | Colored (prominent) glass, e.g. `#0a84ff` |
 | `data-glass-dim` | — | 35% dark layer for clear glass over bright media |
 | `data-glass-interactive` | — | Spring press, stretch toward the pointer, glow from the touch point |
@@ -99,8 +98,8 @@ All are plain HTML; the script wires them up automatically. Full markup and opti
 3. **The shape comes from `border-radius`.** Set it on the element itself (`999px` for capsules, `50%` for circles).
 4. **Glass must not be inside `.lg-backdrop`** (it would refract itself), and every `.lg-scene` needs a positioned context.
 5. **Text on glass**: regular variant, `font-weight ≥ 500`, enough size; check it over the brightest and darkest part of the background.
-6. **Big lens over big text**: the auto bezel can stretch letters that cross the rim a lot. For pills/lenses over headlines set `data-glass-bezel` ≈ 20% of the height and `data-glass-refraction` ≈ half of the bezel.
-7. **Performance**: each glass element is a live filter. Keep it to a handful per viewport; avoid huge `data-glass-blur` values on full-screen panels; prefer `transform` for animation.
+6. **Big lens over big text**: 60 px of refraction chops letters on a large clear lens. Over headlines use `data-glass-refraction="30"`–`"40"`.
+7. **Performance**: each glass element is a live filter. Keep it to a handful per viewport; avoid full-screen regular glass panels (each runs two large blurs); prefer `transform` for animation.
 
 More symptoms → fixes: `references/troubleshooting.md`. How the optics work (to explain or tune): `references/how-it-works.md`.
 
@@ -111,4 +110,5 @@ More symptoms → fixes: `references/troubleshooting.md`. How the optics work (t
 3. Copy `assets/` into the project and link both files (or the CDN).
 4. Write semantic markup with `.glass` + attributes; use the component classes instead of re-implementing them.
 5. Choose appearance: `data-glass-appearance="dark"` on `<html>` for dark UIs over dark/colourful media.
-6. Verify in a browser: no rectangles around glass, rim visibly bends the background, text legible, keyboard focus visible, and the page still looks right with Reduce Motion / Reduce Transparency enabled. Check `data-lg-mode` on elements if refraction seems missing.
+6. Make it interactive: buttons with `data-glass-interactive`, draggable lenses, and components emit events (`lg:change`, `lg:select`). Never set `textContent`/`innerHTML` directly on a `.glass` element — put text in a child `<span>` and update that.
+7. Verify in a browser: no rectangles around glass, rim visibly bends the background, text legible, keyboard focus visible, and the page still looks right with Reduce Motion / Reduce Transparency enabled. Check `data-lg-mode` on elements if refraction seems missing.
