@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR" data-glass-appearance="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Liquid Glass — landing com navbar</title>
+  <link rel="stylesheet" href="../dist/liquid-glass.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #0b0b10; color: #f5f5f7; font: 16px/1.6 var(--lg-font); }
+    /* A navbar fica fixa sobre o conteúdo que rola (camada funcional do HIG). */
+    .nav {
+      position: fixed; top: 16px; left: 50%; translate: -50% 0; z-index: 10;
+      display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: 999px;
+    }
+    .nav a.link { color: var(--lg-fg-2); text-decoration: none; font-weight: 600; font-size: 14px; padding: 10px 14px; border-radius: 999px; }
+    .nav a.link:hover { background: var(--lg-highlight); color: var(--lg-fg); }
+    .logo { font-weight: 750; letter-spacing: -0.02em; padding: 0 12px; }
+    .edge { position: fixed; height: 110px; }               /* scroll edge effect */
+    header { height: 92vh; display: grid; place-items: center; text-align: center;
+      background: linear-gradient(transparent 70%, #0b0b10), url(assets/aurora.jpg) center / cover; }
+    header h1 { font-size: clamp(48px, 9vw, 112px); line-height: .9; letter-spacing: -0.06em; margin: 0; }
+    section { max-width: 760px; margin: 0 auto; padding: 60px 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+    .grid div { aspect-ratio: 1; border-radius: 22px; }
+  </style>
+</head>
+<body>
+  <!-- No Chromium a navbar refrata a página inteira ao vivo; nos demais vira vidro fosco. -->
+  <div class="lg-progressive-blur edge" data-direction="top" data-blur="18" style="--lg-pb-tint: rgb(0 0 0 / .35)"></div>
+  <nav class="glass nav" aria-label="Principal">
+    <span class="logo">Asimov</span>
+    <a class="link" href="#cursos">Cursos</a>
+    <a class="link" href="#sobre">Sobre</a>
+    <a class="glass lg-button" data-size="small" data-glass-interactive data-glass-tint="#0a84ff" href="#">Entrar</a>
+  </nav>
+  <header><h1>Aprenda<br>construindo.</h1></header>
+  <section id="cursos">
+    <h2>Role a página</h2>
+    <p>Veja o conteúdo passar por baixo da navbar: as bordas do vidro dobram as cores e o texto, enquanto o desfoque progressivo mantém a barra legível.</p>
+    <div class="grid">
+      <div style="background:linear-gradient(135deg,#ff5f6d,#6a3dff)"></div>
+      <div style="background:repeating-linear-gradient(45deg,#111 0 14px,#ff3d7f 14px 28px)"></div>
+      <div style="background:conic-gradient(from 90deg,#00d4a6,#1fb6ff,#6a3dff,#00d4a6)"></div>
+      <div style="background:radial-gradient(circle at 50% 120%,#ffb347 0 30%,#ff6f61 31% 45%,#2b1055 46%)"></div>
+      <div style="background:linear-gradient(0deg,#ff9a3c 0 33%,#ff3d7f 33% 66%,#6a3dff 66%)"></div>
+      <div style="background:repeating-radial-gradient(circle at 30% 70%,#f7f7f7 0 6px,#111 6px 12px)"></div>
+    </div>
+  </section>
+  <section id="sobre"><h2>Sobre</h2><p>Liquid Glass em HTML, CSS e JS puros.</p><p style="height:60vh"></p></section>
+  <script src="../dist/liquid-glass.js"></script>
+</body>
+</html>

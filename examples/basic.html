@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR" data-glass-appearance="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Liquid Glass — básico</title>
+  <link rel="stylesheet" href="../dist/liquid-glass.css">
+  <style>
+    html, body { margin: 0; height: 100%; font-family: var(--lg-font); background: #111; }
+    /* .lg-scene + .lg-backdrop = refração real também no Safari e Firefox */
+    .lg-scene { position: fixed; inset: 0; overflow: hidden; }
+    .lg-backdrop { position: absolute; inset: 0; background: url(assets/dunes.jpg) center / cover; }
+    .center { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 24px; }
+    .card { width: 320px; border-radius: 30px; padding: 20px 22px; font-size: 15px; line-height: 1.5; }
+    .card b { display: block; font-size: 19px; margin-bottom: 4px; }
+    .lens { position: absolute; left: 60px; top: 60px; width: 170px; height: 170px; border-radius: 50%; }
+  </style>
+</head>
+<body>
+  <div class="lg-scene">
+    <div class="lg-backdrop"></div>
+    <div class="center">
+      <div class="glass card"><b>Uma superfície de vidro</b>Qualquer elemento com a classe <code>.glass</code>.</div>
+      <button class="glass lg-button" data-glass-interactive data-glass-tint="#0a84ff">Começar</button>
+    </div>
+    <div class="glass lens" data-glass="clear" data-glass-draggable data-glass-interactive
+         data-glass-magnify="1.35" data-glass-refraction="24" data-glass-bezel="34" data-glass-dispersion="0.25"
+         tabindex="0" aria-label="Lente arrastável"></div>
+  </div>
+  <script src="../dist/liquid-glass.js"></script>
+</body>
+</html>

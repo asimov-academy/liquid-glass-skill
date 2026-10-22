@@ -1,0 +1,20 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>debug</title>
+<link rel="stylesheet" href="../dist/liquid-glass.css">
+<style>
+ body{margin:0;height:100vh;background:
+   repeating-linear-gradient(90deg,#000 0 2px,transparent 2px 24px),
+   repeating-linear-gradient(0deg,#000 0 2px,transparent 2px 24px),
+   linear-gradient(135deg,#ff6b6b,#ffd93d 40%,#6bcB77 60%,#4d96ff);font:700 48px system-ui}
+ .t{position:absolute;left:40px;top:300px;color:#111}
+ .g{position:absolute;left:100px;top:100px;width:500px;height:160px;border-radius:80px}
+ .c{position:absolute;left:700px;top:80px;width:220px;height:220px;border-radius:50%}
+ #map{position:absolute;left:100px;top:420px;border:1px solid #fff}
+</style></head><body>
+<div class="t">The quick brown fox jumps over</div>
+<div class="glass g" data-glass="clear" data-glass-blur="0"></div>
+<div class="glass c" data-glass="clear" data-glass-blur="0" data-glass-magnify="1.4" data-glass-refraction="30" data-glass-bezel="40"></div>
+<img id="map">
+<script src="../dist/liquid-glass.js"></script>
+<script>setTimeout(()=>{document.getElementById('map').src=LiquidGlass.displacementMap(500,160,80,{}).disp},300)</script>
+</body></html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en" data-glass-appearance="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Liquid Glass starter</title>
+  <!-- Copy liquid-glass.css / liquid-glass.js from the skill's assets/ folder, or use the CDN -->
+  <link rel="stylesheet" href="liquid-glass.css">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; font-family: var(--lg-font); background: #0b0b10; color: #f5f5f7; }
+
+    /* Scene: whatever is inside .lg-backdrop gets refracted in every browser */
+    .hero { position: relative; min-height: 100svh; overflow: hidden; }
+    .hero > .lg-backdrop {
+      position: absolute; inset: 0;
+      /* replace with your image/video/canvas/content */
+      background:
+        radial-gradient(circle at 20% 25%, #ff3d7f 0, transparent 40%),
+        radial-gradient(circle at 80% 30%, #ffb347 0, transparent 38%),
+        radial-gradient(circle at 40% 80%, #6a3dff 0, transparent 45%),
+        repeating-linear-gradient(115deg, rgb(255 255 255 / .06) 0 2px, transparent 2px 22px),
+        #140a2a;
+    }
+    .hero h1 { position: absolute; inset: 0; display: grid; place-items: center; margin: 0;
+      font-size: clamp(56px, 11vw, 140px); letter-spacing: -0.06em; text-align: center; }
+
+    /* Functional layer */
+    .nav { position: absolute; top: 16px; left: 50%; translate: -50% 0; z-index: 2;
+      display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 999px; }
+    .nav a { color: var(--lg-fg-2); text-decoration: none; font-weight: 600; font-size: 14px; padding: 10px 14px; border-radius: 999px; }
+    .nav a:hover { background: var(--lg-highlight); color: var(--lg-fg); }
+    .actions { position: absolute; left: 0; right: 0; bottom: 12vh; display: flex; gap: 12px; justify-content: center; }
+  </style>
+</head>
+<body>
+  <section class="hero lg-scene">
+    <div class="lg-backdrop"><h1>Your title</h1></div>
+
+    <nav class="glass nav" aria-label="Main">
+      <a href="#">Product</a><a href="#">Pricing</a><a href="#">Docs</a>
+      <a class="glass lg-button" data-size="small" data-glass-interactive data-glass-tint="#0a84ff" href="#">Sign up</a>
+    </nav>
+
+    <div class="actions">
+      <button class="glass lg-button" data-size="large" data-glass-interactive data-glass-tint="#0a84ff">Get started</button>
+      <button class="glass lg-button" data-size="large" data-glass-interactive>Learn more</button>
+    </div>
+  </section>
+
+  <script src="liquid-glass.js"></script>
+</body>
+</html>

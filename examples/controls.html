@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR" data-glass-appearance="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Liquid Glass — controles</title>
+  <link rel="stylesheet" href="../dist/liquid-glass.css">
+  <style>
+    html, body { margin: 0; height: 100%; font-family: var(--lg-font); }
+    .lg-scene { position: fixed; inset: 0; }
+    .lg-scene > .lg-backdrop { position: absolute; inset: 0; background: url(assets/dunes.jpg) center / cover; }
+    .panel { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: min(380px, 92vw);
+      border-radius: 34px; padding: 20px; display: grid; gap: 18px; }
+    .row { display: flex; align-items: center; justify-content: space-between; font-weight: 600; }
+    .seg { width: 100%; background: rgb(120 120 128 / .24); }
+    .seg .lg-tabs-list { width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="lg-scene">
+    <div class="lg-backdrop"></div>
+    <div class="glass panel">
+      <!-- dentro de um painel de vidro, o segmentado é preenchimento simples (HIG: evite vidro sobre vidro) -->
+      <nav class="lg-tabs seg" aria-label="Modo">
+        <div class="lg-tabs-list" role="tablist">
+          <button role="tab" aria-selected="true">Dia</button>
+          <button role="tab">Noite</button>
+          <button role="tab">Auto</button>
+        </div>
+      </nav>
+      <div class="row">Wi‑Fi <label class="lg-switch"><input type="checkbox" checked aria-label="Wi‑Fi"></label></div>
+      <div class="row">Modo avião <label class="lg-switch" style="--lg-switch-on:#ff9f0a"><input type="checkbox" aria-label="Modo avião"></label></div>
+      <div class="lg-slider"><input type="range" min="0" max="100" value="60" aria-label="Brilho"></div>
+      <div class="lg-slider" style="--lg-slider-fill:#30d158"><input type="range" min="0" max="100" value="25" aria-label="Volume"></div>
+    </div>
+  </div>
+  <script src="../dist/liquid-glass.js"></script>
+</body>
+</html>

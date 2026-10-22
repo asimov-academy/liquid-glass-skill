@@ -1,0 +1,424 @@
+/*!
+ * Liquid Glass for the web — v1.0.0 — MIT — Asimov Academy
+ * https://github.com/asimov-academy/liquid-glass-skill
+ */
+
+:root {
+  --lg-light-angle: -45deg;
+  --lg-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
+  --lg-accent: #0a84ff;
+  --lg-green: #34c759;
+}
+
+/* ------------------------------------------------------------------ *
+ * Appearance tokens (light is the default; dark via data-glass-appearance)
+ * ------------------------------------------------------------------ */
+
+.lg-ready, .lg-group-ready {
+  --lg-fg: #1d1d1f;
+  --lg-fg-2: rgb(29 29 31 / 0.6);
+  --lg-fill: rgb(255 255 255 / 0.22);
+  --lg-fill-clear: rgb(255 255 255 / 0.05);
+  --lg-solid: rgb(246 246 248 / 0.96);
+  --lg-rim-hi: rgb(255 255 255 / 0.95);
+  --lg-rim-lo: rgb(255 255 255 / 0.28);
+  --lg-edge: rgb(255 255 255 / 0.32);
+  --lg-catch: rgb(255 255 255 / 0.7);
+  --lg-catch-2: rgb(255 255 255 / 0.32);
+  --lg-inner: rgb(255 255 255 / 0.10);
+  --lg-highlight: rgb(0 0 0 / 0.07);
+  --lg-shadow: 0 12px 32px -10px rgb(0 0 0 / 0.28), 0 2px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+[data-glass-appearance="dark"] .lg-ready,
+.lg-ready[data-glass-appearance="dark"],
+[data-glass-appearance="dark"] .lg-group-ready,
+.lg-group-ready[data-glass-appearance="dark"] {
+  --lg-fg: #f5f5f7;
+  --lg-fg-2: rgb(245 245 247 / 0.6);
+  --lg-fill: rgb(255 255 255 / 0.07);
+  --lg-fill-clear: rgb(255 255 255 / 0.02);
+  --lg-solid: rgb(34 34 37 / 0.96);
+  --lg-rim-hi: rgb(255 255 255 / 0.75);
+  --lg-rim-lo: rgb(255 255 255 / 0.14);
+  --lg-edge: rgb(255 255 255 / 0.16);
+  --lg-catch: rgb(255 255 255 / 0.42);
+  --lg-catch-2: rgb(255 255 255 / 0.2);
+  --lg-inner: rgb(255 255 255 / 0.05);
+  --lg-highlight: rgb(255 255 255 / 0.12);
+  --lg-shadow: 0 14px 36px -12px rgb(0 0 0 / 0.55), 0 2px 8px -2px rgb(0 0 0 / 0.3);
+}
+
+[data-glass-appearance="light"] .lg-ready,
+.lg-ready[data-glass-appearance="light"],
+[data-glass-appearance="light"] .lg-group-ready,
+.lg-group-ready[data-glass-appearance="light"] {
+  --lg-fg: #1d1d1f;
+  --lg-fg-2: rgb(29 29 31 / 0.6);
+  --lg-fill: rgb(255 255 255 / 0.22);
+  --lg-fill-clear: rgb(255 255 255 / 0.05);
+  --lg-solid: rgb(246 246 248 / 0.96);
+  --lg-rim-hi: rgb(255 255 255 / 0.95);
+  --lg-rim-lo: rgb(255 255 255 / 0.28);
+  --lg-edge: rgb(255 255 255 / 0.32);
+  --lg-catch: rgb(255 255 255 / 0.7);
+  --lg-catch-2: rgb(255 255 255 / 0.32);
+  --lg-inner: rgb(255 255 255 / 0.10);
+  --lg-highlight: rgb(0 0 0 / 0.07);
+  --lg-shadow: 0 12px 32px -10px rgb(0 0 0 / 0.28), 0 2px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-glass-appearance="auto"] .lg-ready:not([data-glass-appearance="light"]) {
+    --lg-fg: #f5f5f7;
+    --lg-fg-2: rgb(245 245 247 / 0.6);
+    --lg-fill: rgb(255 255 255 / 0.07);
+    --lg-fill-clear: rgb(255 255 255 / 0.02);
+    --lg-solid: rgb(34 34 37 / 0.96);
+    --lg-rim-hi: rgb(255 255 255 / 0.75);
+    --lg-rim-lo: rgb(255 255 255 / 0.14);
+    --lg-edge: rgb(255 255 255 / 0.16);
+    --lg-catch: rgb(255 255 255 / 0.42);
+    --lg-catch-2: rgb(255 255 255 / 0.2);
+    --lg-inner: rgb(255 255 255 / 0.05);
+    --lg-highlight: rgb(255 255 255 / 0.12);
+    --lg-shadow: 0 14px 36px -12px rgb(0 0 0 / 0.55), 0 2px 8px -2px rgb(0 0 0 / 0.3);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * The material
+ * ------------------------------------------------------------------ */
+
+.lg-ready {
+  isolation: isolate;
+  color: var(--lg-fg);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lg-layers {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: var(--lg-shadow);
+}
+
+.lg-layers > span {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Base fill + bevel lighting */
+.lg-layers > .lg-tint {
+  background: var(--lg-fill);
+  box-shadow:
+    inset 0 0 0 0.5px var(--lg-edge),
+    inset 1.5px 1.5px 1px -1px var(--lg-catch),
+    inset -1.5px -1.5px 1px -1px var(--lg-catch-2),
+    inset 0 0 18px -4px var(--lg-inner);
+}
+
+.lg-ready[data-lg-variant="clear"] > .lg-layers > .lg-tint { background: var(--lg-fill-clear); }
+
+/* HIG: dim bright media under clear glass with a 35% dark layer */
+.lg-ready[data-glass-dim] > .lg-layers > .lg-tint { background: rgb(0 0 0 / 0.35); }
+
+/* Tinted / prominent glass */
+.lg-ready[data-lg-tinted] { --lg-fg: #fff; }
+.lg-ready[data-lg-tinted] > .lg-layers > .lg-tint {
+  background: color-mix(in srgb, var(--lg-tint) 80%, transparent);
+  box-shadow:
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.22),
+    inset 1.5px 1.5px 1px -1px rgb(255 255 255 / 0.55),
+    inset -1.5px -1.5px 1px -1px rgb(255 255 255 / 0.25),
+    inset 0 -10px 20px -12px rgb(255 255 255 / 0.25);
+}
+
+/* Specular rim — two lobes that follow the global light angle */
+.lg-layers > .lg-rim {
+  padding: var(--lg-rim-width, 1.2px);
+  background: conic-gradient(from var(--lg-light-angle),
+    var(--lg-rim-hi), var(--lg-rim-lo) 12%, transparent 24%, transparent 34%, var(--lg-rim-lo) 44%,
+    var(--lg-rim-hi) 50%, var(--lg-rim-lo) 58%, transparent 68%, transparent 80%, var(--lg-rim-lo) 90%, var(--lg-rim-hi));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 0.85;
+}
+
+/* Interactive glow — radiates from the touch point */
+.lg-layers > .lg-glow {
+  background: radial-gradient(130% 130% at var(--lg-px, 50%) var(--lg-py, 50%),
+    rgb(255 255 255 / 0.34), rgb(255 255 255 / 0.1) 38%, transparent 70%);
+  opacity: var(--lg-press, 0);
+}
+
+.lg-interactive { cursor: pointer; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.lg-interactive:hover > .lg-layers > .lg-glow { opacity: max(var(--lg-press, 0), 0.4); }
+@media (hover: none) { .lg-interactive:hover > .lg-layers > .lg-glow { opacity: var(--lg-press, 0); } }
+
+.lg-ready:focus-visible { outline: 2px solid var(--lg-accent); outline-offset: 3px; }
+
+/* ------------------------------------------------------------------ *
+ * Building blocks
+ * ------------------------------------------------------------------ */
+
+.lg-button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--lg-fg, inherit);
+  font: 590 15px/1 var(--lg-font);
+  letter-spacing: -0.01em;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.lg-button svg { width: 1.15em; height: 1.15em; flex: none; }
+.lg-button.lg-icon { width: 44px; padding: 0; }
+.lg-button[data-size="small"] { height: 32px; padding: 0 13px; font-size: 13px; }
+.lg-button[data-size="small"].lg-icon { width: 32px; padding: 0; }
+.lg-button[data-size="large"] { height: 54px; padding: 0 26px; font-size: 17px; }
+.lg-button[data-size="large"].lg-icon { width: 54px; padding: 0; }
+.lg-button:disabled { opacity: 0.45; cursor: default; }
+
+.lg-surface { border-radius: 28px; padding: 16px; }
+
+/* Toolbar: one glass capsule, plain items inside (HIG: group related actions) */
+.lg-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+}
+.lg-toolbar > button,
+.lg-toolbar > a,
+.lg-toolbar-item {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  font: 590 14px/1 var(--lg-font);
+  cursor: pointer;
+  transition: background-color 0.18s ease, scale 0.25s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.lg-toolbar > button svg, .lg-toolbar-item svg { width: 20px; height: 20px; }
+.lg-toolbar > button:hover, .lg-toolbar-item:hover { background: var(--lg-highlight); }
+.lg-toolbar > button:active, .lg-toolbar-item:active { scale: 0.92; }
+.lg-toolbar > button[aria-pressed="true"] { background: var(--lg-highlight); color: var(--lg-accent); }
+.lg-toolbar > button:focus-visible { outline: 2px solid var(--lg-accent); outline-offset: -2px; }
+.lg-toolbar-sep { width: 1px; height: 22px; margin: 0 4px; background: currentColor; opacity: 0.16; }
+
+/* Tab bar / segmented control */
+.lg-tabs { display: inline-flex; padding: 4px; border-radius: 999px; }
+.lg-tabs-list {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.lg-tabs .lg-tab,
+.lg-tabs [role="tab"] {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: 590 12px/1 var(--lg-font);
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: color 0.25s ease;
+}
+.lg-tabs [role="tab"] svg { width: 24px; height: 24px; }
+.lg-tabs [role="tab"][aria-selected="true"] { color: var(--lg-tab-active, var(--lg-accent)); }
+.lg-tabs [role="tab"]:focus-visible { outline: 2px solid var(--lg-accent); outline-offset: -3px; }
+.lg-tabs[data-size="large"] [role="tab"] { min-height: 56px; padding: 0 20px; font-size: 11px; }
+
+.lg-tabs-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: 999px;
+  z-index: 0;
+  pointer-events: none;
+  transform-origin: center;
+}
+.lg-tabs-indicator[data-active] { z-index: 2; }
+.lg-tabs-indicator > .lg-layers { box-shadow: 0 6px 18px -6px rgb(0 0 0 / calc(0.35 * var(--lg-active, 0))); }
+.lg-tabs-indicator.lg-ready > .lg-layers > .lg-tint {
+  background: rgb(var(--lg-indicator-rgb, 120 120 128) / calc(0.2 * (1 - var(--lg-active, 0))));
+  box-shadow: inset 0 0 0 0.5px rgb(255 255 255 / calc(0.25 * var(--lg-active, 0)));
+}
+.lg-tabs-indicator > .lg-layers > .lg-refract,
+.lg-tabs-indicator > .lg-layers > .lg-rim { opacity: var(--lg-active, 0); }
+
+/* Switch */
+.lg-switch {
+  position: relative;
+  display: inline-block;
+  width: 64px;
+  height: 28px;
+  flex: none;
+  vertical-align: middle;
+  cursor: pointer;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.lg-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 3; }
+.lg-switch-track { position: absolute; inset: 0; border-radius: 999px; background: rgb(120 120 128 / 0.32); overflow: hidden; }
+.lg-switch-fill { position: absolute; inset: 0; border-radius: inherit; background: var(--lg-switch-on, var(--lg-green)); opacity: var(--lg-on, 0); }
+.lg-switch-knob { position: absolute; left: 0; top: 2px; width: 39px; height: 24px; border-radius: 999px; z-index: 2; pointer-events: none; }
+.lg-switch-knob > .lg-layers { box-shadow: 0 3px 8px rgb(0 0 0 / 0.16), 0 1px 1px rgb(0 0 0 / 0.08); }
+.lg-switch-knob.lg-ready > .lg-layers > .lg-tint { background: rgb(255 255 255 / calc(1 - 0.95 * var(--lg-active, 0))); }
+.lg-switch-knob > .lg-layers > .lg-refract,
+.lg-switch-knob > .lg-layers > .lg-rim { opacity: var(--lg-active, 0); }
+.lg-switch:has(input:focus-visible) { outline: 2px solid var(--lg-accent); outline-offset: 3px; border-radius: 999px; }
+.lg-switch:has(input:disabled) { opacity: 0.45; cursor: default; }
+
+/* Slider */
+.lg-slider { position: relative; display: block; height: 30px; min-width: 120px; touch-action: pan-y; }
+.lg-slider input {
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
+  opacity: 0; cursor: pointer; z-index: 3; -webkit-appearance: none; appearance: none; background: transparent;
+}
+.lg-slider input::-webkit-slider-thumb { -webkit-appearance: none; width: 38px; height: 24px; }
+.lg-slider input::-moz-range-thumb { width: 38px; height: 24px; border: 0; }
+.lg-slider-track {
+  position: absolute; left: 0; right: 0; top: 50%; height: 6px; translate: 0 -50%;
+  border-radius: 999px; background: rgb(120 120 128 / 0.3); overflow: hidden;
+}
+.lg-slider-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: inherit; background: var(--lg-slider-fill, var(--lg-accent)); }
+.lg-slider-knob { position: absolute; left: 0; top: 50%; width: 38px; height: 24px; border-radius: 999px; z-index: 2; pointer-events: none; translate: 0 -50%; }
+.lg-slider-knob > .lg-layers { box-shadow: 0 3px 8px rgb(0 0 0 / 0.16), 0 1px 1px rgb(0 0 0 / 0.08); }
+.lg-slider-knob.lg-ready > .lg-layers > .lg-tint { background: rgb(255 255 255 / calc(1 - 0.95 * var(--lg-active, 0))); }
+.lg-slider-knob > .lg-layers > .lg-refract,
+.lg-slider-knob > .lg-layers > .lg-rim { opacity: var(--lg-active, 0); }
+.lg-slider:has(input:focus-visible) .lg-slider-knob { outline: 2px solid var(--lg-accent); outline-offset: 3px; }
+
+/* Menu (button that morphs into a panel) */
+.lg-menu { position: relative; display: inline-block; }
+.lg-menu-panel {
+  position: absolute;
+  z-index: 50;
+  min-width: 230px;
+  padding: 6px;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  transform-origin: top left;
+}
+.lg-menu-panel[hidden] { display: none; }
+.lg-menu-panel > :not(.lg-layers) { opacity: clamp(0, calc((var(--lg-open, 0) - 0.4) * 2.4), 1); }
+.lg-menu-panel [role^="menuitem"] {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: 500 15px/1.2 var(--lg-font);
+  letter-spacing: -0.01em;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.lg-menu-panel [role^="menuitem"] svg { width: 18px; height: 18px; flex: none; opacity: 0.9; }
+.lg-menu-panel [role^="menuitem"]:hover,
+.lg-menu-panel [role^="menuitem"]:focus-visible { background: var(--lg-highlight); outline: none; }
+.lg-menu-panel [data-destructive] { color: #ff453a; }
+.lg-menu-sep { height: 1px; margin: 5px 12px; background: currentColor; opacity: 0.12; }
+
+/* Progressive blur / scroll edge effect */
+.lg-progressive-blur { position: absolute; left: 0; right: 0; top: 0; height: 110px; pointer-events: none; z-index: 5; }
+.lg-progressive-blur[data-direction="bottom"] { top: auto; bottom: 0; }
+.lg-pb-layer, .lg-pb-tint { position: absolute; inset: 0; pointer-events: none; }
+
+/* Scenes (cross-browser refraction) */
+.lg-scene, [data-glass-scene] { position: relative; }
+
+/* ------------------------------------------------------------------ *
+ * Accessibility — HIG: honor Reduce Transparency, Increase Contrast, Reduce Motion
+ * ------------------------------------------------------------------ */
+
+@media (prefers-reduced-transparency: reduce) {
+  .lg-ready > .lg-layers > .lg-tint,
+  .lg-ready[data-lg-variant="clear"] > .lg-layers > .lg-tint { background: var(--lg-solid); }
+  .lg-ready > .lg-layers > .lg-rim { opacity: 0.4; }
+}
+
+@media (prefers-contrast: more) {
+  .lg-ready > .lg-layers > .lg-tint,
+  .lg-ready[data-lg-variant="clear"] > .lg-layers > .lg-tint {
+    background: var(--lg-solid);
+    box-shadow: inset 0 0 0 1.5px var(--lg-fg);
+  }
+  .lg-ready > .lg-layers > .lg-rim { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-toolbar > button, .lg-toolbar-item { transition: none; }
+}
+
+/* Bevel lighting map (generated per shape by the JS: key light + internal reflection) */
+.lg-layers > .lg-shade {
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  opacity: var(--lg-shade-opacity, 0.85);
+}
+[data-glass-appearance="dark"] .lg-ready > .lg-layers > .lg-shade,
+.lg-ready[data-glass-appearance="dark"] > .lg-layers > .lg-shade { --lg-shade-opacity: 0.55; }
+@media (prefers-contrast: more) { .lg-ready > .lg-layers > .lg-shade { display: none; } }
+
+/* ------------------------------------------------------------------ *
+ * Glass group (GlassEffectContainer): members melt into one surface
+ * ------------------------------------------------------------------ */
+.lg-group-ready { isolation: isolate; }
+.lg-ready[data-lg-mode="member"] > .lg-layers { display: none; }
+.lg-group-layer { position: absolute; z-index: -1; pointer-events: none; }
+.lg-group-layer span { position: absolute; inset: 0; pointer-events: none; }
+.lg-g-refract, .lg-g-tint {
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+.lg-g-shadow { filter: drop-shadow(0 10px 20px rgb(0 0 0 / 0.2)) drop-shadow(0 1px 2px rgb(0 0 0 / 0.12)); }
+.lg-g-tint { background: var(--lg-fill); }
+.lg-group-ready[data-glass="clear"] .lg-g-tint { background: var(--lg-fill-clear); }
+.lg-g-shade { background-size: 100% 100%; background-repeat: no-repeat; }
+@media (prefers-reduced-transparency: reduce) { .lg-g-tint { background: var(--lg-solid); } }
+@media (prefers-contrast: more) { .lg-g-tint { background: var(--lg-solid); } }

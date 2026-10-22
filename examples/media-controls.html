@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR" data-glass-appearance="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Liquid Glass — sobre mídia em movimento</title>
+  <link rel="stylesheet" href="../dist/liquid-glass.css">
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; font-family: var(--lg-font); }
+    .lg-scene { position: fixed; inset: 0; }
+    canvas.lg-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .controls { position: absolute; left: 50%; bottom: 40px; translate: -50% 0; display: flex; gap: 12px; }
+  </style>
+</head>
+<body>
+  <!-- HIG: variante clear sobre mídia; em fundo claro, dim de 35% (data-glass-dim). -->
+  <div class="lg-scene">
+    <canvas class="lg-backdrop" id="fx"></canvas>
+    <div class="controls">
+      <button class="glass lg-button lg-icon" data-size="large" data-glass="clear" data-glass-dim data-glass-interactive aria-label="Voltar">⏮</button>
+      <button class="glass lg-button" data-size="large" data-glass="clear" data-glass-dim data-glass-interactive>Pausar</button>
+      <button class="glass lg-button lg-icon" data-size="large" data-glass="clear" data-glass-dim data-glass-interactive aria-label="Avançar">⏭</button>
+    </div>
+  </div>
+  <script src="../dist/liquid-glass.js"></script>
+  <script>
+    // Conteúdo animado: a refração acompanha cada quadro.
+    const c = document.getElementById('fx'), ctx = c.getContext('2d');
+    function size() { c.width = innerWidth * devicePixelRatio; c.height = innerHeight * devicePixelRatio; }
+    addEventListener('resize', size); size();
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function draw(t) {
+      const w = c.width, h = c.height;
+      ctx.fillStyle = '#0b0b18'; ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 14; i++) {
+        const x = w * (0.5 + 0.42 * Math.sin(t / 2400 + i * 1.7)), y = h * (0.5 + 0.38 * Math.cos(t / 3100 + i * 2.3));
+        const r = Math.min(w, h) * (0.12 + 0.05 * Math.sin(i));
+        const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+        g.addColorStop(0, `hsl(${(i * 47 + t / 40) % 360} 95% 62%)`); g.addColorStop(1, 'transparent');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      }
+      ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 2 * devicePixelRatio;
+      for (let y = 0; y < h; y += 28 * devicePixelRatio) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y + Math.sin(t / 900 + y) * 20); ctx.stroke(); }
+      if (!reduce) requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+  </script>
+</body>
+</html>

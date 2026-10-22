@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR" data-glass-appearance="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Liquid Glass — toolbar e menu</title>
+  <link rel="stylesheet" href="../dist/liquid-glass.css">
+  <style>
+    html, body { margin: 0; height: 100%; font-family: var(--lg-font); }
+    .lg-scene { position: fixed; inset: 0; }
+    .lg-scene > .lg-backdrop { position: absolute; inset: 0; background: url(assets/bokeh.jpg) center / cover; }
+    .bar { position: absolute; top: 30%; left: 50%; translate: -50% 0; display: flex; gap: 12px; align-items: flex-start; }
+    #out { position: absolute; bottom: 24px; left: 0; right: 0; text-align: center; color: #fff9; }
+  </style>
+</head>
+<body>
+  <div class="lg-scene">
+    <div class="lg-backdrop"></div>
+    <div class="bar">
+      <div class="glass lg-toolbar" role="toolbar" aria-label="Edição">
+        <button aria-label="Desfazer">↶</button>
+        <button aria-label="Refazer">↷</button>
+      </div>
+      <div class="lg-menu">
+        <button class="glass lg-button lg-icon" data-glass-interactive aria-haspopup="menu" aria-label="Mais ações">•••</button>
+        <div class="glass lg-menu-panel" role="menu" aria-label="Ações">
+          <button role="menuitem">Copiar</button>
+          <button role="menuitem">Compartilhar</button>
+          <button role="menuitem">Favoritar</button>
+          <div class="lg-menu-sep" role="separator"></div>
+          <button role="menuitem" data-destructive>Apagar</button>
+        </div>
+      </div>
+    </div>
+    <p id="out">Clique em •••</p>
+  </div>
+  <script src="../dist/liquid-glass.js"></script>
+  <script>
+    document.querySelector('.lg-menu').addEventListener('lg:select', function (e) {
+      document.getElementById('out').textContent = 'Você escolheu: ' + e.detail.value;
+    });
+  </script>
+</body>
+</html>
